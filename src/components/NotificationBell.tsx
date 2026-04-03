@@ -1,136 +1,103 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '../services/notificationService';
-import { Bell, X, CheckCheck, Loader2, Info, AlertTriangle, CheckCircle2, ShieldAlert } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { formatDistanceToNow } from '../utils/time';
+import { Bell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { signalRService } from '../services/signalRService';
+import { useAuthStore } from '../store/useAuthStore';
 
 export const NotificationBell = () => {
-    const [isOpen, setIsOpen] = useState(false);
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { accessToken } = useAuthStore();
+    const lastNotifIdRef = useRef<string | null>(null);
 
-    const { data: notifications, isLoading } = useQuery({
+    const { data: notifications } = useQuery({
         queryKey: ['notifications'],
         queryFn: notificationService.getUserNotifications,
-        refetchInterval: 30000, // Poll every 30 seconds
     });
 
-    const markReadMutation = useMutation({
-        mutationFn: notificationService.markAsRead,
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
-    });
+    useEffect(() => {
+        if (!accessToken) return;
 
-    const markAllReadMutation = useMutation({
-        mutationFn: notificationService.markAllAsRead,
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
-    });
+        signalRService.startConnection(accessToken);
+
+        const unsubscribe = signalRService.onReceiveNotification(() => {
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        });
+
+        return () => {
+            unsubscribe();
+            signalRService.stopConnection();
+        };
+    }, [accessToken, queryClient]);
 
     const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
+    const latestNotification = notifications && notifications.length > 0 ? notifications[0] : null;
 
-    const getIcon = (type: string) => {
-        switch (type) {
-            case 'Success': return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-            case 'Warning': return <AlertTriangle className="w-4 h-4 text-amber-500" />;
-            case 'Error': return <ShieldAlert className="w-4 h-4 text-red-500" />;
-            default: return <Info className="w-4 h-4 text-blue-500" />;
-        }
-    };
-
-    return (
-        <div className="relative">
-            <button 
-                onClick={() => setIsOpen(!isOpen)}
-                className="relative p-2 text-slate-400 hover:text-white transition-colors"
-            >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 rounded-full border-2 border-[#1e293b] text-[8px] font-black text-white flex items-center justify-center">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                )}
-            </button>
-
-            <AnimatePresence>
-                {isOpen && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsOpen(false)}
-                            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute right-0 top-12 z-[70] w-80 bg-[#1e293b] border border-slate-800 rounded-3xl shadow-2xl overflow-hidden"
-                        >
-                            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
-                                <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Notifications</h3>
-                                <div className="flex items-center gap-3">
-                                    {unreadCount > 0 && (
-                                        <button 
-                                            onClick={() => markAllReadMutation.mutate()}
-                                            className="text-[8px] font-black text-blue-500 uppercase tracking-widest hover:text-blue-400 transition-colors"
-                                        >
-                                            Mark All Read
-                                        </button>
-                                    )}
-                                    <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-white">
-                                        <X className="w-4 h-4" />
-                                    </button>
+    // Toast logic for new notifications
+    useEffect(() => {
+        if (latestNotification && !latestNotification.isRead) {
+            if (lastNotifIdRef.current !== latestNotification.id) {
+                // Show brief notification toast
+                toast.custom((t) => (
+                    <div
+                        className={`${
+                            t.visible ? 'animate-enter' : 'animate-leave'
+                        } max-w-md w-full bg-[#1e293b] shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 border border-blue-500/30 backdrop-blur-md`}
+                    >
+                        <div className="flex-1 w-0 p-4">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0 pt-0.5">
+                                    <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/40">
+                                        <Bell className="h-5 w-5 text-blue-500" />
+                                    </div>
+                                </div>
+                                <div className="ml-3 flex-1">
+                                    <p className="text-[10px] font-black text-white uppercase tracking-widest leading-none mb-1">
+                                        Security Alert
+                                    </p>
+                                    <p className="text-[11px] font-bold text-white truncate uppercase">
+                                        {latestNotification.title}
+                                    </p>
+                                    <p className="mt-1 text-[10px] text-slate-400 line-clamp-1">
+                                        {latestNotification.message}
+                                    </p>
                                 </div>
                             </div>
+                        </div>
+                        <div className="flex border-l border-slate-800">
+                            <button
+                                onClick={() => {
+                                    toast.dismiss(t.id);
+                                    navigate('/notifications');
+                                }}
+                                className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-[10px] font-black text-blue-500 uppercase tracking-widest hover:text-blue-400 focus:outline-none"
+                            >
+                                View
+                            </button>
+                        </div>
+                    </div>
+                ), { duration: 4000 });
+                
+                lastNotifIdRef.current = latestNotification.id;
+            }
+        } else if (latestNotification?.isRead) {
+            // Update ref even if read to avoid re-toasting if it becomes unread somehow
+            lastNotifIdRef.current = latestNotification.id;
+        }
+    }, [latestNotification, navigate]);
 
-                            <div className="max-h-96 overflow-y-auto no-scrollbar">
-                                {isLoading ? (
-                                    <div className="p-10 flex flex-col items-center justify-center gap-3">
-                                        <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
-                                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Syncing...</span>
-                                    </div>
-                                ) : notifications?.length === 0 ? (
-                                    <div className="p-10 text-center">
-                                        <div className="size-12 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-700/50">
-                                            <Bell className="w-6 h-6 text-slate-600" />
-                                        </div>
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">No Alerts Found</p>
-                                    </div>
-                                ) : (
-                                    <div className="divide-y divide-slate-800/50">
-                                        {notifications?.map((notif) => (
-                                            <div 
-                                                key={notif.id}
-                                                onClick={() => !notif.isRead && markReadMutation.mutate(notif.id)}
-                                                className={`p-5 transition-all cursor-pointer ${notif.isRead ? 'opacity-60' : 'bg-blue-500/5 border-l-2 border-blue-500'}`}
-                                            >
-                                                <div className="flex gap-4">
-                                                    <div className="mt-1">{getIcon(notif.type)}</div>
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <h4 className="text-[11px] font-black text-white uppercase tracking-tight">{notif.title}</h4>
-                                                            <span className="text-[8px] font-bold text-slate-500 uppercase italic">
-                                                                {formatDistanceToNow(new Date(notif.createdAt))}
-                                                            </span>
-                                                        </div>
-                                                        <p className="text-[10px] text-slate-400 leading-relaxed line-clamp-2">{notif.message}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="p-4 bg-slate-900/50 border-t border-slate-800 text-center">
-                                <button className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] hover:text-white transition-colors">
-                                    View Security Logs
-                                </button>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
-        </div>
+    return (
+        <button 
+            onClick={() => navigate('/notifications')}
+            className="relative p-2.5 text-slate-400 hover:text-white transition-all hover:bg-slate-800/50 rounded-xl border border-transparent hover:border-slate-700/50 group"
+        >
+            <Bell className={`w-5 h-5 transition-transform duration-300 ${unreadCount > 0 ? 'group-hover:rotate-12' : ''}`} />
+            {unreadCount > 0 && (
+                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1e293b] ring-2 ring-red-500/20 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+            )}
+        </button>
     );
 };

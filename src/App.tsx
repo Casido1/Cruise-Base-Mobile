@@ -19,6 +19,7 @@ const WalletPage = lazy(() => import('./pages/Wallet'));
 const ProfilePage = lazy(() => import('./pages/Profile'));
 const MyFleetPage = lazy(() => import('./pages/MyFleet'));
 const ContractCreationPage = lazy(() => import('./pages/ContractCreation'));
+const NotificationsPage = lazy(() => import('./pages/Notifications'));
 
 const RouteLoader = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -70,6 +71,7 @@ function App() {
             {/* Shared Protected Routes */}
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
           </Route>
         </Route>
 

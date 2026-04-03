@@ -84,11 +84,17 @@ const CompanyList = () => {
                                 className="bg-[#1e293b]/40 border border-slate-800 p-5 rounded-[2rem] flex items-center justify-between group active:bg-slate-800/60 transition-all cursor-pointer"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="size-12 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl flex items-center justify-center border border-slate-700 shadow-inner group-hover:border-blue-500/30 transition-colors overflow-hidden">
+                                    <div className={`size-12 rounded-2xl flex items-center justify-center border shadow-inner transition-all overflow-hidden ${
+                                        company.logoUrl 
+                                        ? 'bg-white border-slate-700' 
+                                        : 'bg-gradient-to-br from-blue-600/20 to-emerald-600/20 border-blue-500/30'
+                                    }`}>
                                         {company.logoUrl ? (
                                             <img src={company.logoUrl} alt={company.name} className="w-full h-full object-cover" />
                                         ) : (
-                                            <Building2 className="w-6 h-6 text-slate-500" />
+                                            <span className="text-sm font-black text-blue-400 uppercase">
+                                                {company.name.charAt(0)}
+                                            </span>
                                         )}
                                     </div>
                                     <div>
