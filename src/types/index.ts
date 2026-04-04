@@ -103,7 +103,7 @@ export interface Company {
     email?: string;
     phoneNumber?: string;
     isActive: boolean;
-    createdAt: string;
+    createdOn: string;
 }
 
 export interface CompanyParameters {
