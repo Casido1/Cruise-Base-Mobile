@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
-import { useQuery } from '@tanstack/react-query';
-import { authService } from '../services/authService';
 import {
     LayoutDashboard,
     Wallet,
@@ -23,12 +21,6 @@ export const Layout = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-
-    const { data: userDetails } = useQuery({
-        queryKey: ['userDetails'],
-        queryFn: authService.getUserDetails,
-        enabled: !!user,
-    });
 
     const handleLogout = () => {
         logout();
