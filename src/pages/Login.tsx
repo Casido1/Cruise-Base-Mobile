@@ -55,7 +55,9 @@ export const LoginPage = () => {
                     email: userDetails.email,
                     fullName: `${userDetails.firstName} ${userDetails.lastName}`,
                     role: mappedRole,
-                    profilePicture: userDetails.pictures?.pictureUrl
+                    profilePicture: userDetails.pictures?.pictureUrl,
+                    companyName: userDetails.companyName,
+                    companyLogo: userDetails.companyLogoUrl
                 });
 
                 navigate(targetPath);

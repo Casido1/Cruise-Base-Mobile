@@ -6,6 +6,8 @@ export interface User {
     role: UserRole;
     fullName: string;
     profilePicture?: string;
+    companyName?: string;
+    companyLogo?: string;
 }
 
 export interface AuthResponse {
