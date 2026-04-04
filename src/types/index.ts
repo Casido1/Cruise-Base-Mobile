@@ -31,21 +31,7 @@ export interface RegisterData {
     role: UserRole | number;
 }
 
-export interface Wallet {
-    id: string;
-    balance: number;
-    currency: string;
-    isPinSet: boolean;
-}
 
-export interface Transaction {
-    id: string;
-    amount: number;
-    type: 'Commission' | 'Collection' | 'Withdrawal' | 'Split';
-    status: 'Pending' | 'Completed' | 'Failed';
-    createdAt: string;
-    description: string;
-}
 
 export interface Vehicle {
     id: string;

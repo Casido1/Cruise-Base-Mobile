@@ -12,7 +12,53 @@
     <title>CruiseBase Mobile</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <style>
+        body { background-color: #0f172a; margin: 0; }
+        .cb-splash {
+          position: fixed; inset: 0; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; background-color: #0f172a;
+          font-family: system-ui, -apple-system, sans-serif;
+        }
+        .cb-rings { position: relative; display: flex; align-items: center; justify-content: center; width: 100px; height: 100px; margin-bottom: 2rem; }
+        .cb-ring-1, .cb-ring-2 {
+          position: absolute; border-radius: 50%; box-sizing: border-box;
+          animation: cb-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        .cb-ring-1 { width: 100%; height: 100%; border: 2px solid rgba(59, 130, 246, 0.2); }
+        .cb-ring-2 { width: 140%; height: 140%; border: 2px solid rgba(16, 185, 129, 0.1); animation-delay: 0.2s; }
+        .cb-core {
+          position: relative; z-index: 10; width: 50px; height: 50px; border-radius: 50%;
+          background: linear-gradient(to top right, #3b82f6, #34d399);
+          animation: cb-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+          box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+        }
+        .cb-title {
+          font-size: 1.25rem; font-weight: 900; letter-spacing: 0.1em;
+          text-transform: uppercase; color: white; margin-bottom: 0.5rem;
+        }
+        .cb-dots { display: flex; gap: 4px; }
+        .cb-dot { width: 6px; height: 6px; border-radius: 50%; animation: cb-bounce 1s infinite alternate; }
+        .cb-dot:nth-child(1) { background-color: #3b82f6; }
+        .cb-dot:nth-child(2) { background-color: #10b981; animation-delay: 0.1s; }
+        .cb-dot:nth-child(3) { background-color: #3b82f6; animation-delay: 0.2s; }
+
+        @keyframes cb-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+        @keyframes cb-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(0.95); } }
+        @keyframes cb-bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-6px); } }
+      </style>
+      <div class="cb-splash">
+        <div class="cb-rings">
+          <div class="cb-ring-1"></div>
+          <div class="cb-ring-2"></div>
+          <div class="cb-core"></div>
+        </div>
+        <h2 class="cb-title">CruiseBase</h2>
+        <div class="cb-dots">
+          <div class="cb-dot"></div><div class="cb-dot"></div><div class="cb-dot"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

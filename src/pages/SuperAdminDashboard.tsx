@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { vehicleService } from '../services/vehicleService';
-import { walletService } from '../services/walletService';
+
 import { companyService } from '../services/companyService';
 import { 
     Users, 
@@ -30,10 +30,7 @@ const SuperAdminDashboard = () => {
         queryFn: () => companyService.getAllCompanies(),
     });
 
-    const { data: wallet } = useQuery({
-        queryKey: ['global-revenue'],
-        queryFn: walletService.getBalance,
-    });
+
 
     const totalActive = Array.isArray(vehicles) ? vehicles.filter(v => v.isActive).length : 0;
     const totalFleet = Array.isArray(vehicles) ? vehicles.length : 0;
@@ -59,28 +56,7 @@ const SuperAdminDashboard = () => {
                 </div>
             </div>
 
-            {/* Global Revenue Card */}
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-br from-indigo-600 to-blue-700 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden"
-            >
-                <div className="absolute -right-10 -top-10 size-48 bg-white/10 rounded-full blur-3xl" />
-                <div className="relative z-10">
-                    <p className="text-indigo-100/80 text-[10px] font-black uppercase tracking-widest mb-1">Total System Revenue</p>
-                    <h2 className="text-4xl font-black text-white tracking-tight">₦{(wallet?.balance || 24500000).toLocaleString()}</h2>
-                    <div className="mt-6 flex gap-4">
-                        <div className="px-3 py-1.5 bg-white/10 rounded-xl flex items-center gap-2 backdrop-blur-md">
-                            <TrendingUp className="w-3 h-3 text-emerald-400" />
-                            <span className="text-[10px] font-black text-white uppercase">+12.5%</span>
-                        </div>
-                        <div className="px-3 py-1.5 bg-white/10 rounded-xl flex items-center gap-2 backdrop-blur-md">
-                            <BarChart3 className="w-3 h-3 text-blue-300" />
-                            <span className="text-[10px] font-black text-white uppercase">TOP TIER</span>
-                        </div>
-                    </div>
-                </div>
-            </motion.div>
+
 
             {/* Global Stats Grid */}
             <div className="grid grid-cols-2 gap-4">

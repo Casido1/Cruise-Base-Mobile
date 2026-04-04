@@ -24,23 +24,7 @@ const OwnerDashboard = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-2">
-                {user?.companyLogo ? (
-                    <img src={user.companyLogo} alt={user.companyName} className="size-14 rounded-2xl object-cover shadow-xl border border-slate-800" />
-                ) : (
-                    <div className="size-14 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-xl">
-                        <Building className="w-7 h-7 text-white" />
-                    </div>
-                )}
-                <div>
-                    <h2 className="text-2xl font-black text-white tracking-tighter uppercase leading-none">{user?.companyName || 'Fleet Overview'}</h2>
-                    <div className="flex items-center gap-2 mt-1">
-                        <Briefcase className="w-3 h-3 text-emerald-500" />
-                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Partner Dashboard</p>
-                    </div>
-                </div>
-            </div>
+
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-4">

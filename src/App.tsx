@@ -15,7 +15,7 @@ const OwnerDashboard = lazy(() => import('./pages/OwnerDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 const CompanyList = lazy(() => import('./pages/CompanyList'));
-const WalletPage = lazy(() => import('./pages/Wallet'));
+
 const ProfilePage = lazy(() => import('./pages/Profile'));
 const MyFleetPage = lazy(() => import('./pages/MyFleet'));
 const ContractCreationPage = lazy(() => import('./pages/ContractCreation'));
@@ -23,9 +23,20 @@ const NotificationsPage = lazy(() => import('./pages/Notifications'));
 const VehicleDetails = lazy(() => import('./pages/VehicleDetails'));
 
 const RouteLoader = () => (
-  <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-    <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Loading View...</p>
+  <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
+    <div className="relative flex items-center justify-center w-24 h-24">
+       <div className="absolute w-full h-full border-2 border-blue-500/20 rounded-full animate-ping"></div>
+       <div className="absolute w-[140%] h-[140%] border-2 border-emerald-500/10 rounded-full animate-ping" style={{ animationDelay: '0.2s' }}></div>
+       <div className="relative z-10 w-12 h-12 bg-gradient-to-tr from-blue-500 to-emerald-400 rounded-full animate-pulse shadow-[0_0_40px_rgba(59,130,246,0.5)]"></div>
+    </div>
+    <div className="flex flex-col items-center gap-2">
+       <h2 className="text-xl font-black text-white tracking-widest uppercase">CruiseBase</h2>
+       <div className="flex items-center gap-1.5 mt-1">
+         <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
+         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+         <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+       </div>
+    </div>
   </div>
 );
 
@@ -71,7 +82,7 @@ function App() {
             </Route>
 
             {/* Shared Protected Routes */}
-            <Route path="/wallet" element={<WalletPage />} />
+
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
           </Route>

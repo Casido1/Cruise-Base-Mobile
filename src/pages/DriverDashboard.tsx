@@ -26,23 +26,7 @@ const DriverDashboard = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-8">
-                {user?.companyLogo ? (
-                    <img src={user.companyLogo} alt={user.companyName} className="size-14 rounded-2xl object-cover shadow-xl border border-slate-800" />
-                ) : (
-                    <div className="size-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl">
-                        <Building className="w-7 h-7 text-white" />
-                    </div>
-                )}
-                <div>
-                    <h2 className="text-2xl font-black text-white tracking-tighter uppercase leading-none">{user?.companyName || 'Driver Dashboard'}</h2>
-                    <div className="flex items-center gap-2 mt-1">
-                        <Sparkles className="w-3 h-3 text-amber-500" />
-                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Active Partner</p>
-                    </div>
-                </div>
-            </div>
+
 
             {/* Ownership Progress */}
             <motion.div 

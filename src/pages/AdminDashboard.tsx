@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { vehicleService } from '../services/vehicleService';
-import { walletService } from '../services/walletService';
+
 import { 
     Users, 
     Car, 
@@ -26,11 +26,7 @@ const AdminDashboard = () => {
         enabled: !!user,
     });
 
-    const { data: wallet } = useQuery({
-        queryKey: ['company-wallet'],
-        queryFn: walletService.getBalance,
-        enabled: !!user,
-    });
+
 
     const activeVehicles = Array.isArray(vehicles) ? vehicles.filter(v => v.isActive).length : 0;
     const totalVehicles = Array.isArray(vehicles) ? vehicles.length : 0;
@@ -46,23 +42,7 @@ const AdminDashboard = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-2">
-                {user?.companyLogo ? (
-                    <img src={user.companyLogo} alt={user.companyName} className="size-14 rounded-2xl object-cover shadow-xl border border-slate-800" />
-                ) : (
-                    <div className="size-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl">
-                        <Building className="w-7 h-7 text-white" />
-                    </div>
-                )}
-                <div>
-                    <h2 className="text-2xl font-black text-white tracking-tighter uppercase leading-none">{user?.companyName || 'Company Command'}</h2>
-                    <div className="flex items-center gap-2 mt-1">
-                        <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Admin Control Center</p>
-                    </div>
-                </div>
-            </div>
+
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-2 gap-4">
@@ -95,22 +75,7 @@ const AdminDashboard = () => {
                 </motion.div>
             </div>
 
-            {/* Company Financial Summary */}
-            <div className="bg-gradient-to-br from-slate-900 to-indigo-900/20 border border-slate-800 p-8 rounded-[2.5rem]">
-                <div className="flex justify-between items-start mb-6">
-                    <div>
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Escrow / Balance</p>
-                        <h2 className="text-3xl font-black text-white tracking-tight">₦{(wallet?.balance || 2450000).toLocaleString()}</h2>
-                    </div>
-                    <div className="p-3 bg-white/5 rounded-2xl">
-                        <TrendingUp className="w-5 h-5 text-emerald-500" />
-                    </div>
-                </div>
-                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 w-[65%]" />
-                </div>
-                <p className="text-[8px] text-slate-600 mt-4 font-bold uppercase tracking-[0.2em]">+14% SINCE LAST MONDAY</p>
-            </div>
+
 
             {/* Critical Alerts */}
             <div className="space-y-4">

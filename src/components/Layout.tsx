@@ -30,7 +30,6 @@ export const Layout = () => {
 
     const navLinks = [
         { name: 'Dashboard', path: user?.role === 'SuperAdmin' ? '/superadmin' : `/${user?.role?.toLowerCase()}`, icon: LayoutDashboard, roles: ['Admin', 'SuperAdmin', 'Owner', 'Driver'] },
-        { name: 'Wallet', path: '/wallet', icon: Wallet, roles: ['Owner', 'Driver'] },
         { name: 'Fleet', path: user?.role === 'Driver' ? '/driver/vehicle' : user?.role === 'SuperAdmin' ? '/superadmin/vehicles' : user?.role === 'Admin' ? '/admin/vehicles' : '/owner/fleet', icon: Car, roles: ['Admin', 'SuperAdmin', 'Owner', 'Driver'] },
         { name: 'Profile', path: '/profile', icon: UserIcon, roles: ['Admin', 'SuperAdmin', 'Owner', 'Driver'] },
     ].filter(link => !link.roles || (user && link.roles.includes(user.role)));
@@ -46,12 +45,29 @@ export const Layout = () => {
             {/* Top Navigation Bar */}
             <header className="sticky top-0 z-40 h-16 bg-[#1e293b]/80 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-6 safe-top">
                 <div className="flex items-center gap-3">
-                    <div className="size-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-white text-xs">
-                        CB
-                    </div>
-                    <h1 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-                        CruiseBase
-                    </h1>
+                    {user?.role !== 'SuperAdmin' && user?.companyName ? (
+                        <>
+                            {user.companyLogo ? (
+                                <img src={user.companyLogo} alt={user.companyName} className="size-8 rounded-lg object-cover" />
+                            ) : (
+                                <div className="size-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-white text-xs">
+                                    {user.companyName.charAt(0)}
+                                </div>
+                            )}
+                            <h1 className="text-lg font-bold text-white uppercase tracking-tighter">
+                                {user.companyName}
+                            </h1>
+                        </>
+                    ) : (
+                        <>
+                            <div className="size-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-white text-xs">
+                                CB
+                            </div>
+                            <h1 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+                                CruiseBase
+                            </h1>
+                        </>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-4">
