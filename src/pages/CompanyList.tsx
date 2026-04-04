@@ -90,7 +90,7 @@ const CompanyList = () => {
                                         : 'bg-gradient-to-br from-blue-600/20 to-emerald-600/20 border-blue-500/30'
                                     }`}>
                                         {company.logoUrl ? (
-                                            <img src={company.logoUrl} alt={company.name} className="w-full h-full object-cover" />
+                                            <img src={company.logoUrl} alt={company.name} loading="lazy" className="w-full h-full object-cover" />
                                         ) : (
                                             <span className="text-sm font-black text-blue-400 uppercase">
                                                 {company.name.charAt(0)}

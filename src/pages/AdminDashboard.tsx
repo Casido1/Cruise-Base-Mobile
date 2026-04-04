@@ -23,11 +23,13 @@ const AdminDashboard = () => {
     const { data: vehicles, isLoading: isVehiclesLoading } = useQuery<Vehicle[]>({
         queryKey: ['company-vehicles'],
         queryFn: vehicleService.getVehicles,
+        enabled: !!user,
     });
 
     const { data: wallet } = useQuery({
         queryKey: ['company-wallet'],
         queryFn: walletService.getBalance,
+        enabled: !!user,
     });
 
     const activeVehicles = Array.isArray(vehicles) ? vehicles.filter(v => v.isActive).length : 0;

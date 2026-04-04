@@ -10,6 +10,7 @@ const OwnerDashboard = () => {
     const { data: progress, isLoading: isProgressLoading } = useQuery({
         queryKey: ['owner-progress'],
         queryFn: () => vehicleService.getOwnerProgress('fleet-1'),
+        enabled: !!user,
     });
 
     if (isProgressLoading) {

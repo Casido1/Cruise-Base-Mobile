@@ -10,7 +10,7 @@ import { useAuthStore } from '../store/useAuthStore';
 export const NotificationBell = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const { accessToken } = useAuthStore();
+    const accessToken = useAuthStore(state => state.accessToken);
     const lastNotifIdRef = useRef<string | null>(null);
 
     const { data: notifications } = useQuery({

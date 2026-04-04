@@ -17,7 +17,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationBell } from './NotificationBell';
 
 export const Layout = () => {
-    const { user, logout } = useAuthStore();
+    const user = useAuthStore(state => state.user);
+    const logout = useAuthStore(state => state.logout);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();

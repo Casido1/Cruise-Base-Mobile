@@ -18,7 +18,7 @@ import {
 import { motion } from 'framer-motion';
 
 const MyFleetPage = () => {
-    const { user } = useAuthStore();
+    const user = useAuthStore(state => state.user);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 

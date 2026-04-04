@@ -12,6 +12,7 @@ const DriverDashboard = () => {
     const { data: progress, isLoading: isProgressLoading } = useQuery<ContractProgress>({
         queryKey: ['driver-progress'],
         queryFn: () => vehicleService.getDriverProgress('current'),
+        enabled: !!user,
     });
 
     if (isProgressLoading) {

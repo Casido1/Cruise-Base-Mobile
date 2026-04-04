@@ -8,7 +8,9 @@ interface ContractProgressBarProps {
     color: string;
 }
 
-export const ContractProgressBar = ({ label, totalValue, paidAmount, percentage, color }: ContractProgressBarProps) => {
+import { memo } from 'react';
+
+export const ContractProgressBar = memo(({ label, totalValue, paidAmount, percentage, color }: ContractProgressBarProps) => {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-end">
@@ -40,4 +42,4 @@ export const ContractProgressBar = ({ label, totalValue, paidAmount, percentage,
             </div>
         </div>
     );
-};
+});
