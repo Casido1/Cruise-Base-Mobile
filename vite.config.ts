@@ -29,9 +29,10 @@ export default defineConfig({
             type: 'image/png'
           },
           {
-            src: 'favicon.png',
+            src: 'blank-splash.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }
