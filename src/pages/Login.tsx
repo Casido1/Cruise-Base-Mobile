@@ -81,9 +81,6 @@ export const LoginPage = () => {
                 className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full"
             >
                 <div className="mb-12">
-                    <div className="size-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-blue-900/40">
-                        <span className="text-2xl font-black text-white italic">CB</span>
-                    </div>
                     <h1 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">Welcome<br />Back</h1>
                     <p className="text-slate-500 font-bold text-sm tracking-widest uppercase">Sign in to your account</p>
                 </div>
