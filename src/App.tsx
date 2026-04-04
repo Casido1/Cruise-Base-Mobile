@@ -20,6 +20,7 @@ const ProfilePage = lazy(() => import('./pages/Profile'));
 const MyFleetPage = lazy(() => import('./pages/MyFleet'));
 const ContractCreationPage = lazy(() => import('./pages/ContractCreation'));
 const NotificationsPage = lazy(() => import('./pages/Notifications'));
+const VehicleDetails = lazy(() => import('./pages/VehicleDetails'));
 
 const RouteLoader = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -46,6 +47,7 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={['Driver']} />}>
               <Route path="/driver" element={<DriverDashboard />} />
               <Route path="/driver/vehicle" element={<MyFleetPage />} />
+              <Route path="/driver/vehicle/:id" element={<VehicleDetails />} />
             </Route>
 
             {/* Owner Routes */}

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { vehicleService } from '../services/vehicleService';
 import type { ContractProgress } from '../types';
 import { ContractProgressBar } from '../components/vehicles/ContractProgressBar';
@@ -97,24 +98,29 @@ const DriverDashboard = () => {
             </div>
 
             {/* Active Vehicle Card */}
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-gradient-to-br from-slate-900/50 to-slate-800/20 border border-slate-800 p-6 rounded-[2.5rem] flex items-center justify-between group active:scale-[0.98] transition-all"
+            <Link 
+                to={`/driver/vehicle/${progress?.vehicleId || 'current'}`}
+                className="block no-underline"
             >
-                <div className="flex items-center gap-5">
-                    <div className="size-14 bg-slate-900 rounded-2xl flex items-center justify-center border border-slate-800">
-                        <Car className="w-6 h-6 text-slate-500 group-hover:text-blue-500 transition-colors" />
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-gradient-to-br from-slate-900/50 to-slate-800/20 border border-slate-800 p-6 rounded-[2.5rem] flex items-center justify-between group active:scale-[0.98] transition-all"
+                >
+                    <div className="flex items-center gap-5">
+                        <div className="size-14 bg-slate-900 rounded-2xl flex items-center justify-center border border-slate-800">
+                            <Car className="w-6 h-6 text-slate-500 group-hover:text-blue-500 transition-colors" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Current Vehicle</p>
+                            <h4 className="text-lg font-black text-white">TOYOTA COROLLA</h4>
+                            <p className="text-[10px] text-slate-600 font-bold tracking-widest">LND-458-KY • BLACK</p>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Current Vehicle</p>
-                        <h4 className="text-lg font-black text-white">TOYOTA COROLLA</h4>
-                        <p className="text-[10px] text-slate-600 font-bold tracking-widest">LND-458-KY • BLACK</p>
-                    </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-slate-700 group-hover:text-white transition-colors" />
-            </motion.div>
+                    <ChevronRight className="w-5 h-5 text-slate-700 group-hover:text-white transition-colors" />
+                </motion.div>
+            </Link>
         </div>
     );
 };

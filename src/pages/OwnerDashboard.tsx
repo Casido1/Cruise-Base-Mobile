@@ -1,31 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { walletService } from '@/services/walletService';
 import { vehicleService } from '@/services/vehicleService';
-import { BalanceCard } from '../components/wallet/BalanceCard';
-import { TransactionHistory } from '../components/wallet/TransactionHistory';
 import { ContractProgressBar } from '../components/vehicles/ContractProgressBar';
 import { useAuthStore } from '../store/useAuthStore';
-import { Building, TrendingUp, Users, PieChart, Briefcase, ChevronRight, Loader2, Plus } from 'lucide-react';
+import { Building, TrendingUp, Users, PieChart, Briefcase, Loader2, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const OwnerDashboard = () => {
     const user = useAuthStore((state) => state.user);
-    const { data: wallet, isLoading: isWalletLoading } = useQuery({
-        queryKey: ['wallet-balance'],
-        queryFn: walletService.getBalance,
-    });
-
-    const { data: transactions, isLoading: isTxLoading } = useQuery({
-        queryKey: ['transactions'],
-        queryFn: () => walletService.getTransactionHistory(1, 5),
-    });
-
     const { data: progress, isLoading: isProgressLoading } = useQuery({
         queryKey: ['owner-progress'],
         queryFn: () => vehicleService.getOwnerProgress('fleet-1'),
     });
 
-    if (isWalletLoading || isTxLoading || isProgressLoading) {
+    if (isProgressLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
                 <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
@@ -53,13 +40,6 @@ const OwnerDashboard = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Balance Section */}
-            <BalanceCard
-                balance={wallet?.balance || 0}
-                showFundButton={false}
-                onWithdraw={() => {}}
-            />
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-4">
@@ -138,9 +118,6 @@ const OwnerDashboard = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Recent History */}
-            <TransactionHistory transactions={transactions?.transactions || []} limit={3} />
         </div>
     );
 };
