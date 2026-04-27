@@ -70,12 +70,19 @@ export const Layout = () => {
                     )}
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                     <NotificationBell />
+                    <button 
+                        onClick={handleLogout}
+                        className="p-2 text-slate-400 hover:text-red-400 transition-colors"
+                        title="Sign Out"
+                    >
+                        <LogOut className="w-5 h-5" />
+                    </button>
                     {(user?.role === 'Admin' || user?.role === 'SuperAdmin') && (
                         <button 
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="p-2 text-slate-400 hover:text-white transition-colors"
+                            className="p-2 text-slate-400 hover:text-white transition-colors border-l border-slate-800 ml-2 pl-4"
                         >
                             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                         </button>
