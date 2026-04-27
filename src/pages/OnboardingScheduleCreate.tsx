@@ -22,7 +22,6 @@ const OnboardingScheduleCreate = () => {
         handleSubmit,
         setValue,
         watch,
-        formState: { errors },
     } = useForm<OnboardingFormValues>();
 
     const selectedDate = watch('date');
@@ -39,36 +38,41 @@ const OnboardingScheduleCreate = () => {
 
     const bookedSchedules = allSchedules || [];
 
+    // Extract booked dates (YYYY-MM-DD) from all schedules
     const bookedDates = bookedSchedules.map(s => {
         const dt = s.date || (s as any).dateTime;
         if (!dt) return '';
         return dt.includes('T') ? dt.split('T')[0] : dt.split(' ')[0];
     }).filter(Boolean);
 
-    const bookedTimesForSelectedDate = bookedSchedules
-        .filter(s => {
-            const dt = s.date || (s as any).dateTime;
-            return dt && dt.startsWith(selectedDate);
-        })
-        .map(s => {
-            const t = s.time || (s as any).dateTime;
-            if (!t) return '';
-            // Parse as UTC date and convert to local time string for robust comparison
-            const dateObj = new Date(t);
-            const hours = dateObj.getHours().toString().padStart(2, '0');
-            const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-            return `${hours}:${minutes}`;
-        })
-        .filter(Boolean);
+    // Extract booked times (HH:mm) for the currently selected date
+    const bookedTimesForSelectedDate = selectedDate
+        ? bookedSchedules
+            .filter(s => {
+                const dt = s.date || (s as any).dateTime;
+                if (!dt) return false;
+                const dateStr = dt.includes('T') ? dt.split('T')[0] : dt.split(' ')[0];
+                return dateStr === selectedDate;
+            })
+            .map(s => {
+                const t = s.time || (s as any).dateTime;
+                if (!t) return '';
+                const dateObj = new Date(t);
+                const hours = dateObj.getHours().toString().padStart(2, '0');
+                const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+                return `${hours}:${minutes}`;
+            })
+            .filter(Boolean)
+        : [];
 
-    // A date is "fully booked" only if ALL slots are taken
+    // Check if selected date already has any booking
+    const isSelectedDateBooked = selectedDate ? bookedDates.includes(selectedDate) : false;
+
     const timeSlots = [
         '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
         '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
         '15:00', '15:30', '16:00'
     ];
-
-    const isDateFullyBooked = selectedDate && timeSlots.every(slot => bookedTimesForSelectedDate.includes(slot));
 
     const createMutation = useMutation({
         mutationFn: onboardingService.createSchedule,
@@ -87,13 +91,12 @@ const OnboardingScheduleCreate = () => {
     });
 
     const onSubmit = (data: OnboardingFormValues) => {
-        // Validation
         if (!data.date || data.date < tomorrowStr) {
             alert('Please select a valid date from tomorrow onwards');
             return;
         }
-        if (isDateFullyBooked) {
-            alert('This date is already fully booked. Please select another date.');
+        if (bookedDates.includes(data.date)) {
+            alert('This date is already booked');
             return;
         }
         if (!data.time) {
@@ -101,17 +104,17 @@ const OnboardingScheduleCreate = () => {
             return;
         }
         if (bookedTimesForSelectedDate.includes(data.time)) {
-            alert('This time slot is already booked for the selected date');
+            alert('This time slot is already booked');
             return;
         }
-        
+
         if (!user?.id) {
             alert('User ID missing. Please log in again.');
             return;
         }
         const datePayload = `${data.date}T00:00:00Z`;
         const timePayload = `${data.date}T${data.time}:00Z`;
-        
+
         createMutation.mutate({
             userId: user.id,
             date: datePayload,
@@ -127,7 +130,7 @@ const OnboardingScheduleCreate = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="max-w-md mx-auto"
             >
-                <button 
+                <button
                     onClick={() => navigate(-1)}
                     className="mb-8 p-2 hover:bg-slate-900 rounded-full transition-colors"
                 >
@@ -152,10 +155,8 @@ const OnboardingScheduleCreate = () => {
                                 onClick={(e) => (e.target as any).showPicker?.()}
                             />
                         </div>
-                        {errors.date && <p className="text-[10px] text-blue-500 font-bold mt-1 ml-1 uppercase">{errors.date.message}</p>}
-                        {isDateFullyBooked && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1 uppercase italic">This date is already fully booked</p>}
-                        {!isDateFullyBooked && bookedDates.includes(selectedDate) && (
-                            <p className="text-[10px] text-amber-500 font-bold mt-1 ml-1 uppercase italic">This date has existing bookings, but some slots are available</p>
+                        {isSelectedDateBooked && (
+                            <p className="text-[10px] text-red-500 font-bold mt-1 ml-1 uppercase italic">⚠ This date is already booked</p>
                         )}
                     </div>
 
@@ -174,7 +175,7 @@ const OnboardingScheduleCreate = () => {
                                             selectedTime === time
                                                 ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-900/40 translate-y-[-2px]'
                                                 : isBooked
-                                                    ? 'bg-slate-900/20 border-slate-900 text-slate-700 cursor-not-allowed opacity-50'
+                                                    ? 'bg-slate-900/20 border-slate-900 text-slate-700 cursor-not-allowed opacity-50 line-through'
                                                     : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
                                         }`}
                                     >
@@ -183,7 +184,6 @@ const OnboardingScheduleCreate = () => {
                                 );
                             })}
                         </div>
-                        {errors.time && <p className="text-[10px] text-blue-500 font-bold mt-1 ml-1 uppercase">{errors.time.message}</p>}
                     </div>
 
                     <div className="space-y-2">
