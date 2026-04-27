@@ -22,6 +22,7 @@ const MyFleetPage = lazy(() => import('./pages/MyFleet'));
 const ContractCreationPage = lazy(() => import('./pages/ContractCreation'));
 const NotificationsPage = lazy(() => import('./pages/Notifications'));
 const VehicleDetails = lazy(() => import('./pages/VehicleDetails'));
+const OnboardingScheduleCreate = lazy(() => import('./pages/OnboardingScheduleCreate'));
 
 const RouteLoader = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
@@ -87,6 +88,7 @@ function App() {
 
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/onboarding/schedule" element={<OnboardingScheduleCreate />} />
             </Route>
           </Route>
 

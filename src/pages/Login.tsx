@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { LogIn, Loader2, Mail, Lock, ChevronRight } from 'lucide-react';
 import { authService } from '../services/authService';
+import { onboardingService } from '../services/onboardingService';
 import { useAuthStore } from '../store/useAuthStore';
 import { motion } from 'framer-motion';
 
@@ -75,7 +76,22 @@ export const LoginPage = () => {
                     companyLogo: userPayload.companyLogoUrl || userPayload.CompanyLogoUrl
                 });
 
-                console.log('User state set, navigating to:', targetPath);
+                console.log('User state set, initial target path:', targetPath);
+
+                if (mappedRole !== 'SuperAdmin') {
+                    const userId = userPayload.id || userPayload.Id;
+                    try {
+                        const schedule = await onboardingService.getScheduleByUserId(userId);
+                        if (!schedule) {
+                            console.log('No onboarding schedule found, redirecting to onboarding creation');
+                            targetPath = '/onboarding/schedule';
+                        }
+                    } catch (error) {
+                        console.error('Failed to check onboarding schedule', error);
+                    }
+                }
+
+                console.log('Final target path:', targetPath);
                 navigate(targetPath);
             } catch (error) {
                 console.error('Failed to process user details', error);
