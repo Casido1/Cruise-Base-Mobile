@@ -68,6 +68,13 @@ const OnboardingScheduleCreate = () => {
     // Check if selected date already has any booking
     const isSelectedDateBooked = selectedDate ? bookedDates.includes(selectedDate) : false;
 
+    console.log('[DEBUG] allSchedules:', allSchedules);
+    console.log('[DEBUG] bookedSchedules count:', bookedSchedules.length);
+    console.log('[DEBUG] bookedDates:', bookedDates);
+    console.log('[DEBUG] selectedDate:', selectedDate);
+    console.log('[DEBUG] isSelectedDateBooked:', isSelectedDateBooked);
+    console.log('[DEBUG] bookedTimesForSelectedDate:', bookedTimesForSelectedDate);
+
     const timeSlots = [
         '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
         '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
