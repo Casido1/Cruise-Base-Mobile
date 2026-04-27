@@ -53,8 +53,8 @@ const ProfilePage = () => {
                     className="relative inline-block mx-auto"
                 >
                     <div className="size-32 rounded-full border-4 border-[#1e293b] p-1 bg-gradient-to-tr from-blue-500 to-indigo-600 shadow-2xl shadow-blue-900/20">
-                            {userDetails?.pictures?.[0]?.pictureUrl ? (
-                            <img src={userDetails.pictures[0].pictureUrl} loading="lazy" className="size-full rounded-full object-cover" />
+                            {userDetails?.profilePicture ? (
+                            <img src={userDetails.profilePicture} loading="lazy" className="size-full rounded-full object-cover" />
                         ) : (
                             <div className="size-full rounded-full bg-slate-900 flex items-center justify-center text-3xl font-black text-white">
                                 {userDetails?.firstName?.[0]}

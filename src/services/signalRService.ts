@@ -9,7 +9,7 @@ class SignalRService {
             await this.stopConnection();
         }
 
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://cruisebaseapi-production.up.railway.app/';
         
         this.connection = new signalR.HubConnectionBuilder()
             .withUrl(`${baseUrl}/notificationHub`, {

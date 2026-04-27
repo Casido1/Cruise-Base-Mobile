@@ -29,12 +29,14 @@ export const vehicleService = {
 
     getDriverProgress: async (vehicleId: string): Promise<ContractProgress> => {
         const response = await api.get(`/api/vehicle/${vehicleId}/progress/driver`);
-        return response.data;
+        const data = response.data;
+        return data.data || data.Data || data;
     },
 
     getOwnerProgress: async (vehicleId: string): Promise<ContractProgress> => {
         const response = await api.get(`/api/vehicle/${vehicleId}/progress/owner`);
-        return response.data;
+        const data = response.data;
+        return data.data || data.Data || data;
     },
 
     createContract: async (data: any): Promise<void> => {

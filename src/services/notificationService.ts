@@ -4,7 +4,13 @@ import type { Notification } from '../types';
 export const notificationService = {
     getUserNotifications: async (): Promise<Notification[]> => {
         const response = await api.get('api/notification');
-        return response.data;
+        const data = response.data;
+        // Handle both raw arrays and wrapped responses
+        if (Array.isArray(data)) return data;
+        if (data && typeof data === 'object') {
+            return data.notifications || data.items || data.data || [];
+        }
+        return [];
     },
 
     markAsRead: async (id: string): Promise<void> => {

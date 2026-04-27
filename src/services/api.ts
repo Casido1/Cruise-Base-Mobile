@@ -35,10 +35,18 @@ api.interceptors.response.use(
                     refreshToken,
                 });
 
-                const { accessToken, refreshToken: newRefreshToken } = response.data;
-                useAuthStore.getState().setCredentials(accessToken, newRefreshToken);
+                const { 
+                    accessToken, 
+                    AccessToken, 
+                    refreshToken: newRefreshToken, 
+                    RefreshToken: newRefreshTokenPascal 
+                } = response.data;
+                const finalToken = accessToken || AccessToken;
+                const finalRefresh = newRefreshToken || newRefreshTokenPascal;
+                
+                useAuthStore.getState().setCredentials(finalToken, finalRefresh);
 
-                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                originalRequest.headers.Authorization = `Bearer ${finalToken}`;
                 return api(originalRequest);
             } catch (refreshError) {
                 useAuthStore.getState().logout();

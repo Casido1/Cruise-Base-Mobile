@@ -30,12 +30,27 @@ export const LoginPage = () => {
 
     const loginMutation = useMutation({
         mutationFn: authService.login,
-        onSuccess: async (data) => {
-            setCredentials(data.accessToken, data.refreshToken);
+        onSuccess: async (data: any) => {
+            console.log('Login successful, response data:', data);
+            
+            const accessToken = data.accessToken || data.AccessToken;
+            const refreshToken = data.refreshToken || data.RefreshToken;
+            const userPayload = data.user || data.User;
+
+            if (!accessToken || !refreshToken) {
+                console.error('Tokens missing in response:', data);
+                alert('Authentication tokens missing in server response');
+                return;
+            }
+
+            setCredentials(accessToken, refreshToken);
 
             try {
-                const userDetails = await authService.getUserDetails();
-                const roles = (userDetails.roles || []).map((r: string) => r.toLowerCase());
+                if (!userPayload) {
+                    throw new Error('User details not found in login response');
+                }
+                
+                const roles = (userPayload.roles || userPayload.Roles || []).map((r: string) => r.toLowerCase());
                 let mappedRole: 'Admin' | 'SuperAdmin' | 'Owner' | 'Driver' = 'Driver';
                 let targetPath = '/driver';
 
@@ -51,18 +66,19 @@ export const LoginPage = () => {
                 }
 
                 setUser({
-                    id: userDetails.id,
-                    email: userDetails.email,
-                    fullName: `${userDetails.firstName} ${userDetails.lastName}`,
+                    id: userPayload.id || userPayload.Id,
+                    email: userPayload.email || userPayload.Email,
+                    fullName: `${userPayload.firstName || userPayload.FirstName} ${userPayload.lastName || userPayload.LastName}`,
                     role: mappedRole,
-                    profilePicture: userDetails.pictures?.pictureUrl,
-                    companyName: userDetails.companyName,
-                    companyLogo: userDetails.companyLogoUrl
+                    profilePicture: userPayload.profilePicture || userPayload.ProfilePicture,
+                    companyName: userPayload.companyName || userPayload.CompanyName,
+                    companyLogo: userPayload.companyLogoUrl || userPayload.CompanyLogoUrl
                 });
 
+                console.log('User state set, navigating to:', targetPath);
                 navigate(targetPath);
             } catch (error) {
-                console.error('Failed to fetch user details', error);
+                console.error('Failed to process user details', error);
                 navigate('/');
             }
         },

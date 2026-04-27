@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 import { LoginPage } from './pages/Login';
 import { Loader2 } from 'lucide-react';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Optimized route-level code splitting
 const RegisterPage = lazy(() => import('./pages/Register').then(m => ({ default: m.RegisterPage })));
@@ -42,58 +43,60 @@ const RouteLoader = () => (
 
 function App() {
   return (
-    <Suspense fallback={<RouteLoader />}>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/email-verification" element={<EmailVerificationPage />} />
+    <ErrorBoundary>
+      <Suspense fallback={<RouteLoader />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/email-verification" element={<EmailVerificationPage />} />
 
-        {/* Protected Routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<Layout />}>
-            {/* Driver Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['Driver']} />}>
-              <Route path="/driver" element={<DriverDashboard />} />
-              <Route path="/driver/vehicle" element={<MyFleetPage />} />
-              <Route path="/driver/vehicle/:id" element={<VehicleDetails />} />
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              {/* Driver Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['Driver']} />}>
+                <Route path="/driver" element={<DriverDashboard />} />
+                <Route path="/driver/vehicle" element={<MyFleetPage />} />
+                <Route path="/driver/vehicle/:id" element={<VehicleDetails />} />
+              </Route>
+
+              {/* Owner Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['Owner']} />}>
+                <Route path="/owner" element={<OwnerDashboard />} />
+                <Route path="/owner/fleet" element={<MyFleetPage />} />
+              </Route>
+
+              {/* Admin Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/vehicles" element={<MyFleetPage />} />
+                <Route path="/admin/contracts/create" element={<ContractCreationPage />} />
+              </Route>
+
+              {/* SuperAdmin Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['SuperAdmin']} />}>
+                <Route path="/superadmin" element={<SuperAdminDashboard />} />
+                <Route path="/superadmin/companies" element={<CompanyList />} />
+                <Route path="/superadmin/vehicles" element={<MyFleetPage />} />
+              </Route>
+
+              {/* Shared Protected Routes */}
+
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
             </Route>
-
-            {/* Owner Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['Owner']} />}>
-              <Route path="/owner" element={<OwnerDashboard />} />
-              <Route path="/owner/fleet" element={<MyFleetPage />} />
-            </Route>
-
-            {/* Admin Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/vehicles" element={<MyFleetPage />} />
-              <Route path="/admin/contracts/create" element={<ContractCreationPage />} />
-            </Route>
-
-            {/* SuperAdmin Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['SuperAdmin']} />}>
-              <Route path="/superadmin" element={<SuperAdminDashboard />} />
-              <Route path="/superadmin/companies" element={<CompanyList />} />
-              <Route path="/superadmin/vehicles" element={<MyFleetPage />} />
-            </Route>
-
-            {/* Shared Protected Routes */}
-
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
           </Route>
-        </Route>
 
-        {/* Fallback */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/unauthorized" element={<div className="p-10 text-center text-slate-500 font-bold uppercase tracking-widest">Unauthorized Access</div>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+          {/* Fallback */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/unauthorized" element={<div className="p-10 text-center text-slate-500 font-bold uppercase tracking-widest">Unauthorized Access</div>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

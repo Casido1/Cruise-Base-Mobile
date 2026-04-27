@@ -13,7 +13,19 @@ export interface User {
 export interface AuthResponse {
     accessToken: string;
     refreshToken: string;
-    user: User;
+    user: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        userName: string;
+        email: string;
+        address: string;
+        phoneNumber: string;
+        roles: string[];
+        profilePicture?: string;
+        companyName?: string;
+        companyLogoUrl?: string;
+    };
 }
 
 export interface LoginCredentials {

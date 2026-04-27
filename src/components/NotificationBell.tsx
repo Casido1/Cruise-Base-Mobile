@@ -33,8 +33,8 @@ export const NotificationBell = () => {
         };
     }, [accessToken, queryClient]);
 
-    const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
-    const latestNotification = notifications && notifications.length > 0 ? notifications[0] : null;
+    const unreadCount = (Array.isArray(notifications) ? notifications : [])?.filter(n => !n.isRead).length || 0;
+    const latestNotification = Array.isArray(notifications) && notifications.length > 0 ? notifications[0] : null;
 
     // Toast logic for new notifications
     useEffect(() => {

@@ -29,7 +29,7 @@ export const NotificationsPage = () => {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
     });
 
-    const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
+    const unreadCount = (Array.isArray(notifications) ? notifications : [])?.filter(n => !n.isRead).length || 0;
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -79,7 +79,7 @@ export const NotificationsPage = () => {
             </div>
 
             {/* Notifications List */}
-            {notifications?.length === 0 ? (
+            {(!notifications || notifications.length === 0) ? (
                 <div className="py-20 text-center">
                     <div className="size-16 bg-slate-800/50 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-700/50">
                         <Bell className="w-8 h-8 text-slate-600" />
@@ -89,7 +89,7 @@ export const NotificationsPage = () => {
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {notifications?.map((notif, index) => (
+                    {Array.isArray(notifications) && notifications.map((notif, index) => (
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
