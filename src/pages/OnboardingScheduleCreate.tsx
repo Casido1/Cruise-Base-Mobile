@@ -1,7 +1,5 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Calendar, FileText, ChevronRight, Loader2, ArrowLeft } from 'lucide-react';
@@ -9,11 +7,26 @@ import { onboardingService } from '../services/onboardingService';
 import { useAuthStore } from '../store/useAuthStore';
 import { motion } from 'framer-motion';
 
-// Schema and type are now defined inside or handled via interfaces
+type OnboardingFormValues = {
+    date: string;
+    time: string;
+    notes?: string;
+};
 
 const OnboardingScheduleCreate = () => {
     const navigate = useNavigate();
     const user = useAuthStore((state) => state.user);
+
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        watch,
+        formState: { errors },
+    } = useForm<OnboardingFormValues>();
+
+    const selectedDate = watch('date');
+    const selectedTime = watch('time');
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -24,46 +37,43 @@ const OnboardingScheduleCreate = () => {
         queryFn: onboardingService.getAllSchedules,
     });
 
-    const bookedDates = allSchedules?.map(s => {
-        // Handle potential different date formats from API
-        const dt = s.date || (s as any).dateTime; // Fallback for transition
-        return dt.includes('T') ? dt.split('T')[0] : dt;
-    }) || [];
+    const bookedSchedules = allSchedules || [];
 
-    const onboardingSchema = z.object({
-        date: z.string()
-            .min(1, 'Please select a date')
-            .refine(val => val >= tomorrowStr, { message: 'Date must be from tomorrow onwards' })
-            .refine(val => !bookedDates.includes(val), { message: 'This date is already booked' }),
-        time: z.string().min(1, 'Please select a time'),
-        notes: z.string().optional(),
-    });
+    const bookedDates = bookedSchedules.map(s => {
+        const dt = s.date || (s as any).dateTime;
+        if (!dt) return '';
+        return dt.includes('T') ? dt.split('T')[0] : dt.split(' ')[0];
+    }).filter(Boolean);
 
-    type OnboardingFormValues = z.infer<typeof onboardingSchema>;
+    const bookedTimesForSelectedDate = bookedSchedules
+        .filter(s => {
+            const dt = s.date || (s as any).dateTime;
+            return dt && dt.startsWith(selectedDate);
+        })
+        .map(s => {
+            const t = s.time || (s as any).dateTime;
+            if (!t) return '';
+            // Parse as UTC date and convert to local time string for robust comparison
+            const dateObj = new Date(t);
+            const hours = dateObj.getHours().toString().padStart(2, '0');
+            const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        })
+        .filter(Boolean);
 
-    const {
-        register,
-        handleSubmit,
-        setValue,
-        watch,
-        formState: { errors },
-    } = useForm<OnboardingFormValues>({
-        resolver: zodResolver(onboardingSchema),
-    });
-
-    const selectedTime = watch('time');
-
+    // A date is "fully booked" only if ALL slots are taken
     const timeSlots = [
         '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
         '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
         '15:00', '15:30', '16:00'
     ];
 
+    const isDateFullyBooked = selectedDate && timeSlots.every(slot => bookedTimesForSelectedDate.includes(slot));
+
     const createMutation = useMutation({
         mutationFn: onboardingService.createSchedule,
         onSuccess: () => {
             alert('Onboarding schedule created successfully!');
-            // After creation, navigate to the appropriate dashboard
             const roles = [user?.role?.toLowerCase()];
             let targetPath = '/driver';
             if (roles.includes('superadmin')) targetPath = '/superadmin';
@@ -77,6 +87,24 @@ const OnboardingScheduleCreate = () => {
     });
 
     const onSubmit = (data: OnboardingFormValues) => {
+        // Validation
+        if (!data.date || data.date < tomorrowStr) {
+            alert('Please select a valid date from tomorrow onwards');
+            return;
+        }
+        if (isDateFullyBooked) {
+            alert('This date is already fully booked. Please select another date.');
+            return;
+        }
+        if (!data.time) {
+            alert('Please select a time slot');
+            return;
+        }
+        if (bookedTimesForSelectedDate.includes(data.time)) {
+            alert('This time slot is already booked for the selected date');
+            return;
+        }
+        
         if (!user?.id) {
             alert('User ID missing. Please log in again.');
             return;
@@ -125,30 +153,38 @@ const OnboardingScheduleCreate = () => {
                             />
                         </div>
                         {errors.date && <p className="text-[10px] text-blue-500 font-bold mt-1 ml-1 uppercase">{errors.date.message}</p>}
+                        {isDateFullyBooked && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1 uppercase italic">This date is already fully booked</p>}
+                        {!isDateFullyBooked && bookedDates.includes(selectedDate) && (
+                            <p className="text-[10px] text-amber-500 font-bold mt-1 ml-1 uppercase italic">This date has existing bookings, but some slots are available</p>
+                        )}
                     </div>
 
                     <div className="space-y-4">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Preferred Time</label>
                         <div className="grid grid-cols-3 gap-3">
-                            {timeSlots.map((time) => (
-                                <button
-                                    key={time}
-                                    type="button"
-                                    onClick={() => setValue('time', time, { shouldValidate: true })}
-                                    className={`py-3 rounded-xl font-bold text-xs transition-all border ${
-                                        selectedTime === time
-                                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-900/40 translate-y-[-2px]'
-                                            : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
-                                    }`}
-                                >
-                                    {new Date(`2000-01-01T${time}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}
-                                </button>
-                            ))}
+                            {timeSlots.map((time) => {
+                                const isBooked = bookedTimesForSelectedDate.includes(time);
+                                return (
+                                    <button
+                                        key={time}
+                                        type="button"
+                                        disabled={isBooked}
+                                        onClick={() => setValue('time', time, { shouldValidate: true })}
+                                        className={`py-3 rounded-xl font-bold text-xs transition-all border ${
+                                            selectedTime === time
+                                                ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-900/40 translate-y-[-2px]'
+                                                : isBooked
+                                                    ? 'bg-slate-900/20 border-slate-900 text-slate-700 cursor-not-allowed opacity-50'
+                                                    : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                                        }`}
+                                    >
+                                        {new Date(`2000-01-01T${time}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}
+                                    </button>
+                                );
+                            })}
                         </div>
                         {errors.time && <p className="text-[10px] text-blue-500 font-bold mt-1 ml-1 uppercase">{errors.time.message}</p>}
                     </div>
-
-
 
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Additional Notes (Optional)</label>
