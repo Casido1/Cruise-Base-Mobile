@@ -12,7 +12,7 @@ class SignalRService {
         const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://cruisebaseapi-production.up.railway.app/';
         
         this.connection = new signalR.HubConnectionBuilder()
-            .withUrl(`${baseUrl}/notificationHub`, {
+            .withUrl(`${baseUrl}notificationHub`, {
                 accessTokenFactory: () => token,
                 skipNegotiation: false,
                 transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
