@@ -13,7 +13,23 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          {
+            urlPattern: /\/api\/onboarding/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-onboarding',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60,
+              },
+            },
+          },
+        ],
       },
       manifest: {
         name: 'CruiseBase Mobile',
