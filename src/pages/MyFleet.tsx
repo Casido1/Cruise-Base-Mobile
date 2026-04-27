@@ -73,7 +73,7 @@ const MyFleetPage = () => {
                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Active</p>
                     <div className="flex items-center justify-center gap-1.5 font-black text-white italic">
                         <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                        <span className="text-xl leading-none">{filteredVehicles.filter(v => v.isActive).length}</span>
+                        <span className="text-xl leading-none">{filteredVehicles.filter(v => v.status ?? v.isActive).length}</span>
                     </div>
                 </div>
                 <div className="w-px h-8 bg-slate-800" />
@@ -81,7 +81,7 @@ const MyFleetPage = () => {
                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Offline</p>
                     <div className="flex items-center justify-center gap-1.5 font-black text-white italic opacity-50">
                         <XCircle className="w-3 h-3 text-slate-500" />
-                        <span className="text-xl leading-none">{filteredVehicles.filter(v => !v.isActive).length}</span>
+                        <span className="text-xl leading-none">{filteredVehicles.filter(v => !(v.status ?? v.isActive)).length}</span>
                     </div>
                 </div>
                 <div className="w-px h-8 bg-slate-800" />

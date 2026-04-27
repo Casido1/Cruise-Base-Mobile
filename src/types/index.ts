@@ -44,6 +44,10 @@ export interface RegisterData {
 }
 
 
+export interface OwnerPercentage {
+    fullName: string;
+    percentage: number;
+}
 
 export interface Vehicle {
     id: string;
@@ -53,6 +57,7 @@ export interface Vehicle {
     plateNumber: string;
     color: string;
     isActive: boolean;
+    status?: boolean;
     contractType?: string;
     tenure?: number;
     paymentAmount?: number;
@@ -63,6 +68,10 @@ export interface Vehicle {
         publicId: string;
     };
     userId?: string;
+    driverId?: string;
+    driver?: string;
+    ownerPercentages?: OwnerPercentage[];
+    totalEarned?: number;
     contractId?: string;
 }
 
@@ -73,6 +82,7 @@ export interface VehicleToCreate {
     plateNumber: string;
     color: string;
     userId?: string;
+    driverId?: string;
     ownerPercentage?: number;
 }
 
@@ -83,6 +93,7 @@ export interface VehicleToUpdate {
     plateNumber: string;
     color: string;
     userId?: string;
+    driverId?: string;
     contractId?: string;
     pictureId?: string;
 }

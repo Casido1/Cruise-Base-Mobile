@@ -28,11 +28,11 @@ export const VehicleCard = memo(({ vehicle, onClick }: VehicleCardProps) => {
                     </div>
                 </div>
                 <div className={`px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${
-                    vehicle.isActive 
+                    (vehicle.status ?? vehicle.isActive)
                         ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
                         : 'bg-slate-500/10 text-slate-500 border-slate-500/20'
                 }`}>
-                    {vehicle.isActive ? 'Active' : 'Inactive'}
+                    {(vehicle.status ?? vehicle.isActive) ? 'Active' : 'Inactive'}
                 </div>
             </div>
 
@@ -49,17 +49,21 @@ export const VehicleCard = memo(({ vehicle, onClick }: VehicleCardProps) => {
                         <Activity className="w-3 h-3 text-emerald-500" />
                         <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Revenue</span>
                     </div>
-                    <p className="text-sm font-black text-white italic">₦12.5k</p>
+                    <p className="text-sm font-black text-white italic">
+                        ₦{vehicle.totalEarned ? (vehicle.totalEarned >= 1000 ? `${(vehicle.totalEarned / 1000).toFixed(1)}k` : vehicle.totalEarned) : '0.0'}
+                    </p>
                 </div>
             </div>
 
-            {vehicle.userId && (
+            {(vehicle.userId || vehicle.driver) && (
                 <div className="flex items-center justify-between pt-2 border-t border-slate-800/50 relative z-10">
                     <div className="flex items-center gap-2">
                         <div className="p-1.5 bg-slate-800 rounded-lg">
                             <User className="w-3 h-3 text-slate-400" />
                         </div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Assigned Driver</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                            {vehicle.driver || 'Assigned Driver'}
+                        </span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-600" />
                 </div>
