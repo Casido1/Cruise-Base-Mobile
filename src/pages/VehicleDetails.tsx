@@ -120,7 +120,7 @@ const VehicleDetails = () => {
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full aspect-video rounded-[2.5rem] overflow-hidden border border-slate-800 shadow-2xl relative"
+                className="w-full aspect-video rounded-[2.5rem] overflow-hidden border border-slate-800 shadow-2xl relative bg-slate-800"
             >
                 <iframe
                     width="100%"
@@ -129,11 +129,34 @@ const VehicleDetails = () => {
                     style={{ border: 0 }}
                     src={displayMapUrl}
                     allowFullScreen
-                    className="filter grayscale invert contrast-[1.2] opacity-60"
+                    className="opacity-90"
                 />
+                
+                {/* Custom Car Pin Overlay - Centered since bbox centers the map */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <motion.div 
+                        animate={{ 
+                            rotate: telemetry?.heading || 0,
+                            scale: [1, 1.1, 1]
+                        }}
+                        transition={{ 
+                            rotate: { type: "spring", stiffness: 50 },
+                            scale: { duration: 2, repeat: Infinity }
+                        }}
+                        className="relative"
+                    >
+                        {/* Pulse effect */}
+                        <div className="absolute inset-0 bg-blue-500/30 rounded-full animate-ping scale-150" />
+                        
+                        <div className="relative size-12 bg-blue-500 rounded-full border-4 border-white shadow-2xl flex items-center justify-center">
+                            <Car className="w-6 h-6 text-white" />
+                        </div>
+                    </motion.div>
+                </div>
+
                 <div className="absolute top-4 left-4 bg-slate-900/90 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-2">
                     <div className="size-2 bg-emerald-500 rounded-full animate-pulse" />
-                    <span className="text-[9px] font-black text-white uppercase tracking-widest">Live Location</span>
+                    <span className="text-[9px] font-black text-white uppercase tracking-widest">Live Tracking</span>
                 </div>
             </motion.div>
 
