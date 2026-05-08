@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { vehicleService } from '../services/vehicleService';
 import { useAuthStore } from '../store/useAuthStore';
@@ -18,6 +19,7 @@ import {
 import { motion } from 'framer-motion';
 
 const MyFleetPage = () => {
+    const navigate = useNavigate();
     const user = useAuthStore(state => state.user);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -121,7 +123,10 @@ const MyFleetPage = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.05 }}
                         >
-                            <VehicleCard vehicle={vehicle} />
+                            <VehicleCard 
+                                vehicle={vehicle} 
+                                onClick={() => navigate(`/vehicle/${vehicle.id}`)}
+                            />
                         </motion.div>
                     ))
                 ) : (
