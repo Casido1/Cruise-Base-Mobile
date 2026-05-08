@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { vehicleService } from '../services/vehicleService';
 import { useAuthStore } from '../store/useAuthStore';
@@ -123,10 +123,9 @@ const MyFleetPage = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.05 }}
                         >
-                            <VehicleCard 
-                                vehicle={vehicle} 
-                                onClick={() => navigate(`/vehicle/${vehicle.id}`)}
-                            />
+                            <Link to={`/vehicle/${vehicle.id}`} className="block">
+                                <VehicleCard vehicle={vehicle} />
+                            </Link>
                         </motion.div>
                     ))
                 ) : (

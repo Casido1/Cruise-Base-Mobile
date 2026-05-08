@@ -7,11 +7,10 @@ interface VehicleCardProps {
     onClick?: () => void;
 }
 
-export const VehicleCard = memo(({ vehicle, onClick }: VehicleCardProps) => {
+export const VehicleCard = memo(({ vehicle }: VehicleCardProps) => {
     return (
         <div 
-            onClick={onClick}
-            className="group bg-[#1e293b]/40 border border-slate-800 p-5 rounded-[2.5rem] flex flex-col gap-6 active:scale-[0.98] transition-all relative overflow-hidden"
+            className="group bg-[#1e293b]/40 border border-slate-800 p-5 rounded-[2.5rem] flex flex-col gap-6 active:scale-[0.98] transition-all relative overflow-hidden cursor-pointer"
         >
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Car className="w-12 h-12 text-blue-500" />
