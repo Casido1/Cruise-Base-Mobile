@@ -1,6 +1,10 @@
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { vehicleService } from '../services/vehicleService';
+import { telemetryService } from '../services/telemetryService';
+import { signalRService } from '../services/signalRService';
+import type { TelemetryDTO } from '../types';
 import { 
     Car, 
     ChevronLeft, 
@@ -10,21 +14,62 @@ import {
     Hash, 
     Palette,
     Activity,
-    Loader2
+    Loader2,
+    Zap,
+    Navigation,
+    PowerOff
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 const VehicleDetails = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    const { data: vehicle, isLoading } = useQuery({
+    const queryClient = useQueryClient();
+
+    const { data: vehicle, isLoading: isVehicleLoading } = useQuery({
         queryKey: ['vehicle', id],
         queryFn: () => vehicleService.getVehicleById(id!),
         enabled: !!id,
     });
 
-    if (isLoading) {
+    const { data: telemetry, isLoading: isTelemetryLoading } = useQuery({
+        queryKey: ['vehicle-telemetry', id],
+        queryFn: () => telemetryService.getLatestTelemetry(id!),
+        enabled: !!id,
+        refetchInterval: 30000, // Reduced polling frequency as we now use SignalR
+    });
+
+    useEffect(() => {
+        if (!id) return;
+
+        // Join the specific vehicle room for real-time updates
+        signalRService.joinVehicleRoom(id);
+
+        const unsubscribe = signalRService.onReceiveTelemetry(id, (data: TelemetryDTO) => {
+            // Update the React Query cache immediately with the new telemetry data
+            queryClient.setQueryData(['vehicle-telemetry', id], data);
+        });
+
+        return () => {
+            unsubscribe();
+            signalRService.leaveVehicleRoom(id);
+        };
+    }, [id, queryClient]);
+
+    const stopEngineMutation = useMutation({
+        mutationFn: () => telemetryService.stopVehicle(id!),
+        onSuccess: () => {
+            toast.success('Engine stop command sent');
+            queryClient.invalidateQueries({ queryKey: ['vehicle-telemetry', id] });
+        },
+        onError: () => {
+            toast.error('Failed to send engine stop command');
+        }
+    });
+
+    if (isVehicleLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
                 <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
@@ -48,10 +93,10 @@ const VehicleDetails = () => {
         );
     }
 
-    // Default location (Lagos, Nigeria) if no specific coordinates are provided
-    const mapUrl = `https://www.google.com/maps/embed/v1/place?key=REPLACE_WITH_YOUR_GOOGLE_MAPS_API_KEY&q=6.5244,3.3792`;
-    // For demonstration purposes, using an iframe without an API key (standard embed)
-    const displayMapUrl = `https://maps.google.com/maps?q=6.5244,3.3792&hl=es&z=14&amp;output=embed`;
+    // Use real-time coordinates or Lagos default
+    const lat = telemetry?.latitude || 6.5244;
+    const lng = telemetry?.longitude || 3.3792;
+    const displayMapUrl = `https://maps.google.com/maps?q=${lat},${lng}&hl=en&z=15&amp;output=embed`;
 
     return (
         <div className="space-y-6 pb-10">
@@ -157,15 +202,60 @@ const VehicleDetails = () => {
                             </div>
                             <span className="text-[8px] font-black text-emerald-500 uppercase bg-emerald-500/10 px-2 py-1 rounded-lg">Enabled</span>
                         </div>
-                        <div className="flex items-center justify-between p-4 bg-slate-800/20 rounded-2xl border border-slate-800 opacity-50">
+                        <div className="flex items-center justify-between p-4 bg-slate-800/20 rounded-2xl border border-slate-800">
                             <div className="flex items-center gap-3">
                                 <Shield className="w-4 h-4 text-blue-500" />
-                                <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Remote Immobilizer</span>
+                                <div className="space-y-0.5">
+                                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest block">Remote Immobilizer</span>
+                                    <span className="text-[7px] text-slate-500 font-bold uppercase tracking-widest">Auth Required</span>
+                                </div>
                             </div>
-                            <span className="text-[8px] font-black text-slate-500 uppercase bg-slate-800/50 px-2 py-1 rounded-lg">Standby</span>
+                            <button 
+                                onClick={() => {
+                                    if(confirm('Are you sure you want to stop the engine? This command will be sent immediately.')) {
+                                        stopEngineMutation.mutate();
+                                    }
+                                }}
+                                disabled={stopEngineMutation.isPending}
+                                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-red-500 text-[8px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+                            >
+                                {stopEngineMutation.isPending ? 'Sending...' : 'Stop Engine'}
+                            </button>
                         </div>
                     </div>
                 </motion.div>
+
+                {/* Real-time Telemetry Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-[#1e293b]/50 border border-slate-800 p-5 rounded-[2rem]"
+                    >
+                        <div className="flex items-center gap-2 mb-3 text-slate-500">
+                            <Zap className="w-4 h-4 text-amber-500" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Current Speed</span>
+                        </div>
+                        <p className="text-xl font-black text-white italic tracking-tighter">
+                            {telemetry?.speed ? `${telemetry.speed.toFixed(1)} KM/H` : '0 KM/H'}
+                        </p>
+                    </motion.div>
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-[#1e293b]/50 border border-slate-800 p-5 rounded-[2rem]"
+                    >
+                        <div className="flex items-center gap-2 mb-3 text-slate-500">
+                            <Navigation className="w-4 h-4 text-blue-500" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Heading</span>
+                        </div>
+                        <p className="text-xl font-black text-white italic tracking-tighter">
+                            {telemetry?.heading ? `${telemetry.heading}°` : 'N/A'}
+                        </p>
+                    </motion.div>
+                </div>
             </div>
         </div>
     );

@@ -1,18 +1,30 @@
 import * as signalR from '@microsoft/signalr';
+import type { TelemetryDTO } from '../types';
 
 class SignalRService {
-    private connection: signalR.HubConnection | null = null;
-    private handlers: Map<string, Array<() => void>> = new Map();
+    private notificationConnection: signalR.HubConnection | null = null;
+    private telemetryConnection: signalR.HubConnection | null = null;
+    private notificationHandlers: Array<() => void> = [];
+    private telemetryHandlers: Map<string, Array<(data: TelemetryDTO) => void>> = new Map();
+
+    private baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://cruisebaseapi-production.up.railway.app/';
 
     async startConnection(token: string) {
-        if (this.connection) {
-            await this.stopConnection();
-        }
+        await Promise.all([
+            this.startNotificationConnection(token),
+            this.startTelemetryConnection(token)
+        ]);
+    }
 
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://cruisebaseapi-production.up.railway.app/';
-        
-        this.connection = new signalR.HubConnectionBuilder()
-            .withUrl(`${baseUrl}notificationHub`, {
+    async stopConnection() {
+        await this.stopConnections();
+    }
+
+    async startNotificationConnection(token: string) {
+        if (this.notificationConnection) return;
+
+        this.notificationConnection = new signalR.HubConnectionBuilder()
+            .withUrl(`${this.baseUrl}notificationHub`, {
                 accessTokenFactory: () => token,
                 skipNegotiation: false,
                 transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
@@ -20,43 +32,89 @@ class SignalRService {
             .withAutomaticReconnect()
             .build();
 
-        this.connection.on('ReceiveNotification', () => {
-            const receiveHandlers = this.handlers.get('ReceiveNotification');
-            if (receiveHandlers) {
-                receiveHandlers.forEach(handler => handler());
-            }
+        this.notificationConnection.on('ReceiveNotification', () => {
+            this.notificationHandlers.forEach(handler => handler());
         });
 
         try {
-            await this.connection.start();
-            console.log('SignalR Connected.');
+            await this.notificationConnection.start();
+            console.log('SignalR NotificationHub Connected.');
         } catch (err) {
-            console.error('SignalR Connection Error: ', err);
-            // Retry logic is handled by withAutomaticReconnect()
+            console.error('SignalR NotificationHub Connection Error: ', err);
         }
     }
 
-    async stopConnection() {
-        if (this.connection) {
-            await this.connection.stop();
-            this.connection = null;
-        }
-    }
+    async startTelemetryConnection(token: string) {
+        if (this.telemetryConnection) return;
 
-    onReceiveNotification(handler: () => void) {
-        if (!this.handlers.has('ReceiveNotification')) {
-            this.handlers.set('ReceiveNotification', []);
-        }
-        this.handlers.get('ReceiveNotification')?.push(handler);
+        this.telemetryConnection = new signalR.HubConnectionBuilder()
+            .withUrl(`${this.baseUrl}telemetryHub`, {
+                accessTokenFactory: () => token,
+                skipNegotiation: false,
+                transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
+            })
+            .withAutomaticReconnect()
+            .build();
 
-        // Return unsubscribe function
-        return () => {
-            const handlers = this.handlers.get('ReceiveNotification');
+        this.telemetryConnection.on('ReceiveLatestTelemetry', (data: TelemetryDTO) => {
+            const handlers = this.telemetryHandlers.get(data.vehicleId);
             if (handlers) {
-                const index = handlers.indexOf(handler);
-                if (index > -1) {
-                    handlers.splice(index, 1);
-                }
+                handlers.forEach(handler => handler(data));
+            }
+            // Also call global handlers if any (using '*' as key)
+            this.telemetryHandlers.get('*')?.forEach(handler => handler(data));
+        });
+
+        try {
+            await this.telemetryConnection.start();
+            console.log('SignalR TelemetryHub Connected.');
+        } catch (err) {
+            console.error('SignalR TelemetryHub Connection Error: ', err);
+        }
+    }
+
+    async stopConnections() {
+        if (this.notificationConnection) {
+            await this.notificationConnection.stop();
+            this.notificationConnection = null;
+        }
+        if (this.telemetryConnection) {
+            await this.telemetryConnection.stop();
+            this.telemetryConnection = null;
+        }
+    }
+
+    // Notification Handlers
+    onReceiveNotification(handler: () => void) {
+        this.notificationHandlers.push(handler);
+        return () => {
+            this.notificationHandlers = this.notificationHandlers.filter(h => h !== handler);
+        };
+    }
+
+    // Telemetry Handlers and Room Management
+    async joinVehicleRoom(vehicleId: string) {
+        if (this.telemetryConnection?.state === signalR.HubConnectionState.Connected) {
+            await this.telemetryConnection.invoke('JoinVehicleRoom', vehicleId);
+        }
+    }
+
+    async leaveVehicleRoom(vehicleId: string) {
+        if (this.telemetryConnection?.state === signalR.HubConnectionState.Connected) {
+            await this.telemetryConnection.invoke('LeaveVehicleRoom', vehicleId);
+        }
+    }
+
+    onReceiveTelemetry(vehicleId: string, handler: (data: TelemetryDTO) => void) {
+        if (!this.telemetryHandlers.has(vehicleId)) {
+            this.telemetryHandlers.set(vehicleId, []);
+        }
+        this.telemetryHandlers.get(vehicleId)?.push(handler);
+
+        return () => {
+            const handlers = this.telemetryHandlers.get(vehicleId);
+            if (handlers) {
+                this.telemetryHandlers.set(vehicleId, handlers.filter(h => h !== handler));
             }
         };
     }

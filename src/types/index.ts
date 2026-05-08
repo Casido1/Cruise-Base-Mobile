@@ -132,3 +132,21 @@ export interface Notification {
     createdAt: string;
     type: 'Info' | 'Success' | 'Warning' | 'Error';
 }
+
+export interface TelemetryDTO {
+    id: string;
+    vehicleId: string;
+    plateNumber: string;
+    latitude: number;
+    longitude: number;
+    speed?: number;
+    heading?: number;
+    altitude?: number;
+    accuracy?: number;
+    timestamp: string;
+}
+
+export interface DeviceRegistration {
+    vehicleId: string;
+    imei: string;
+}

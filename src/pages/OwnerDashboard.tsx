@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { vehicleService } from '@/services/vehicleService';
+import type { Vehicle } from '../types';
 import { ContractProgressBar } from '../components/vehicles/ContractProgressBar';
 import { useAuthStore } from '../store/useAuthStore';
 import { Building, TrendingUp, Users, PieChart, Briefcase, Loader2, Plus } from 'lucide-react';
@@ -7,13 +8,25 @@ import { motion } from 'framer-motion';
 
 const OwnerDashboard = () => {
     const user = useAuthStore((state) => state.user);
-    const { data: progress, isLoading: isProgressLoading } = useQuery({
-        queryKey: ['owner-progress'],
-        queryFn: () => vehicleService.getOwnerProgress('fleet-1'),
+    
+    const { data: vehicles, isLoading: isVehiclesLoading } = useQuery({
+        queryKey: ['fleet-vehicles'],
+        queryFn: () => (user?.role === 'Owner')
+            ? vehicleService.getVehiclesByUserId('current') 
+            : vehicleService.getVehicles(),
         enabled: !!user,
     });
 
-    if (isProgressLoading) {
+    // Fetch progress for the first vehicle as a representative example 
+    // or we could aggregate, but for now let's use the first one if available.
+    const firstVehicleId = vehicles?.[0]?.id;
+    const { data: progress, isLoading: isProgressLoading } = useQuery({
+        queryKey: ['owner-progress', firstVehicleId],
+        queryFn: () => vehicleService.getOwnerProgress(firstVehicleId!),
+        enabled: !!firstVehicleId,
+    });
+
+    if (isVehiclesLoading || (firstVehicleId && isProgressLoading)) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
                 <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
@@ -21,6 +34,11 @@ const OwnerDashboard = () => {
             </div>
         );
     }
+
+    const totalEarnings = vehicles?.reduce((acc: number, v: Vehicle) => acc + (v.totalEarned || 0), 0) || 0;
+    const activeDrivers = vehicles?.filter((v: Vehicle) => v.driverId && (v.status ?? v.isActive)).length || 0;
+    const fleetHealth = 98; // Calculate health if we have more data, for now placeholder
+    const totalVehicles = vehicles?.length || 0;
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -40,7 +58,7 @@ const OwnerDashboard = () => {
                         <TrendingUp className="w-5 h-5 text-emerald-500" />
                     </div>
                     <p className="text-[9px] text-slate-500 font-black tracking-widest uppercase">Total Earnings</p>
-                    <p className="text-lg font-black text-white mt-1 italic">₦12.4M</p>
+                    <p className="text-lg font-black text-white mt-1 italic">₦{(totalEarnings / 1000000).toFixed(1)}M</p>
                 </motion.div>
 
                 <motion.div 
@@ -56,7 +74,7 @@ const OwnerDashboard = () => {
                         <Users className="w-5 h-5 text-blue-500" />
                     </div>
                     <p className="text-[9px] text-slate-500 font-black tracking-widest uppercase">Active Drivers</p>
-                    <p className="text-lg font-black text-white mt-1 italic">14</p>
+                    <p className="text-lg font-black text-white mt-1 italic">{activeDrivers}</p>
                 </motion.div>
             </div>
 
@@ -88,7 +106,7 @@ const OwnerDashboard = () => {
                         <span className="text-[9px] font-black uppercase tracking-widest">Fleet Status</span>
                     </div>
                     <div className="flex justify-between items-end">
-                        <span className="text-xl font-black text-white italic tracking-tighter">92%</span>
+                        <span className="text-xl font-black text-white italic tracking-tighter">{fleetHealth}%</span>
                         <span className="text-[8px] text-emerald-500 font-black uppercase">+4%</span>
                     </div>
                 </div>
@@ -98,8 +116,8 @@ const OwnerDashboard = () => {
                         <span className="text-[9px] font-black uppercase tracking-widest">Pipeline</span>
                     </div>
                     <div className="flex justify-between items-end">
-                        <span className="text-xl font-black text-white italic tracking-tighter">3 NEW</span>
-                        <span className="text-[8px] text-blue-500 font-black uppercase">Acquiring</span>
+                        <span className="text-xl font-black text-white italic tracking-tighter">{totalVehicles} Total</span>
+                        <span className="text-[8px] text-blue-500 font-black uppercase">Assets</span>
                     </div>
                 </div>
             </div>

@@ -24,8 +24,8 @@ const MyFleetPage = () => {
 
     const { data: vehicles, isLoading } = useQuery<Vehicle[]>({
         queryKey: ['fleet-vehicles'],
-        queryFn: () => user?.role === 'Driver' 
-            ? vehicleService.getVehiclesByUserId(user.id) 
+        queryFn: () => (user?.role === 'Driver' || user?.role === 'Owner')
+            ? vehicleService.getVehiclesByUserId('current') 
             : vehicleService.getVehicles(),
     });
 
