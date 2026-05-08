@@ -96,7 +96,9 @@ const VehicleDetails = () => {
     // Use real-time coordinates or Lagos default
     const lat = telemetry?.latitude || 6.5244;
     const lng = telemetry?.longitude || 3.3792;
-    const displayMapUrl = `https://maps.google.com/maps?q=${lat},${lng}&hl=en&z=15&amp;output=embed`;
+    
+    // OpenStreetMap Embed URL using bbox for framing and marker for position
+    const displayMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01}%2C${lat - 0.01}%2C${lng + 0.01}%2C${lat + 0.01}&layer=mapnik&marker=${lat}%2C${lng}`;
 
     return (
         <div className="space-y-6 pb-10">
@@ -127,6 +129,7 @@ const VehicleDetails = () => {
                     style={{ border: 0 }}
                     src={displayMapUrl}
                     allowFullScreen
+                    className="filter grayscale invert contrast-[1.2] opacity-60"
                 />
                 <div className="absolute top-4 left-4 bg-slate-900/90 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-2">
                     <div className="size-2 bg-emerald-500 rounded-full animate-pulse" />
