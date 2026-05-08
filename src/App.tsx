@@ -88,6 +88,7 @@ function App() {
 
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/vehicle/:id" element={<VehicleDetails />} />
               <Route path="/onboarding/schedule" element={<OnboardingScheduleCreate />} />
             </Route>
           </Route>
