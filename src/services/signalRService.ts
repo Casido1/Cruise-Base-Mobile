@@ -94,14 +94,35 @@ class SignalRService {
 
     // Telemetry Handlers and Room Management
     async joinVehicleRoom(vehicleId: string) {
+        // Wait for connection to be active if it's currently connecting
+        if (this.telemetryConnection?.state === signalR.HubConnectionState.Connecting) {
+            let attempts = 0;
+            while (this.telemetryConnection.state === signalR.HubConnectionState.Connecting && attempts < 10) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                attempts++;
+            }
+        }
+
         if (this.telemetryConnection?.state === signalR.HubConnectionState.Connected) {
-            await this.telemetryConnection.invoke('JoinVehicleRoom', vehicleId);
+            try {
+                await this.telemetryConnection.invoke('JoinVehicleRoom', vehicleId);
+                console.log(`Joined room: ${vehicleId}`);
+            } catch (err) {
+                console.error(`Error joining room ${vehicleId}:`, err);
+            }
+        } else {
+            console.warn(`Cannot join room ${vehicleId}: Connection state is ${this.telemetryConnection?.state}`);
         }
     }
 
     async leaveVehicleRoom(vehicleId: string) {
         if (this.telemetryConnection?.state === signalR.HubConnectionState.Connected) {
-            await this.telemetryConnection.invoke('LeaveVehicleRoom', vehicleId);
+            try {
+                await this.telemetryConnection.invoke('LeaveVehicleRoom', vehicleId);
+                console.log(`Left room: ${vehicleId}`);
+            } catch (err) {
+                console.error(`Error leaving room ${vehicleId}:`, err);
+            }
         }
     }
 

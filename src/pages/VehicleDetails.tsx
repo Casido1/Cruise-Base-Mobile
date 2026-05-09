@@ -21,6 +21,18 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Custom component to handle map recentering
+const MapAutoRecenter = ({ center }: { center: [number, number] }) => {
+    const map = useMap();
+    useEffect(() => {
+        map.setView(center, map.getZoom());
+    }, [center, map]);
+    return null;
+};
 
 const VehicleDetails = () => {
     const { id } = useParams<{ id: string }>();
@@ -95,9 +107,22 @@ const VehicleDetails = () => {
     // Use real-time coordinates or Lagos default
     const lat = telemetry?.latitude || 6.5244;
     const lng = telemetry?.longitude || 3.3792;
-    
-    // OpenStreetMap Embed URL using bbox for framing and marker for position
-    const displayMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01}%2C${lat - 0.01}%2C${lng + 0.01}%2C${lat + 0.01}&layer=mapnik&marker=${lat}%2C${lng}`;
+    const heading = telemetry?.heading || 0;
+
+    // Create a custom car icon using divIcon for rotation
+    const carIcon = L.divIcon({
+        html: `<div style="transform: rotate(${heading - 90}deg); transition: transform 0.5s ease-in-out, left 0.5s linear, top 0.5s linear;" class="flex items-center justify-center">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="fill: rgba(59, 130, 246, 0.4)">
+                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path>
+                    <circle cx="7" cy="17" r="2"></circle>
+                    <path d="M9 17h6"></path>
+                    <circle cx="17" cy="17" r="2"></circle>
+                </svg>
+              </div>`,
+        className: 'custom-car-icon',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+    });
 
     return (
         <div className="space-y-6 pb-10">
@@ -119,26 +144,24 @@ const VehicleDetails = () => {
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full aspect-video rounded-[2.5rem] overflow-hidden border border-slate-800 shadow-2xl relative bg-slate-800"
+                className="w-full aspect-video rounded-[2.5rem] overflow-hidden border border-slate-800 shadow-2xl relative bg-slate-900"
             >
-                <iframe
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    style={{ border: 0 }}
-                    src={displayMapUrl}
-                    allowFullScreen
-                    className="opacity-90"
-                />
-                
-                {/* Custom Car Pin Overlay - Centered since bbox centers the map */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="relative size-12 bg-blue-500 rounded-full border-4 border-white shadow-2xl flex items-center justify-center">
-                        <Car className="w-6 h-6 text-white" />
-                    </div>
-                </div>
+                <MapContainer 
+                    center={[lat, lng]} 
+                    zoom={15} 
+                    scrollWheelZoom={false}
+                    zoomControl={false}
+                    className="w-full h-full grayscale opacity-80"
+                >
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    />
+                    <Marker position={[lat, lng]} icon={carIcon} />
+                    <MapAutoRecenter center={[lat, lng]} />
+                </MapContainer>
 
-                <div className="absolute top-4 left-4 bg-slate-900/90 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-2">
+                <div className="absolute top-4 left-4 z-[1000] bg-slate-900/90 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-2">
                     <div className="size-2 bg-emerald-500 rounded-full animate-pulse" />
                     <span className="text-[9px] font-black text-white uppercase tracking-widest">Live Tracking</span>
                 </div>
