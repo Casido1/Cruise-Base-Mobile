@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { vehicleService } from '../services/vehicleService';
+import { signalRService } from '../services/signalRService';
 import { useAuthStore } from '../store/useAuthStore';
-import type { Vehicle } from '../types';
+import type { Vehicle, TelemetryDTO } from '../types';
 import { VehicleCard } from '../components/vehicles/VehicleCard';
 import { AddVehicleModal } from '../components/vehicles/AddVehicleModal';
 import { 
@@ -23,6 +24,7 @@ const MyFleetPage = () => {
     const user = useAuthStore(state => state.user);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [liveTelemetry, setLiveTelemetry] = useState<Record<string, TelemetryDTO>>({});
 
     const { data: vehicles, isLoading } = useQuery<Vehicle[]>({
         queryKey: ['fleet-vehicles'],
@@ -30,6 +32,34 @@ const MyFleetPage = () => {
             ? vehicleService.getVehiclesByUserId('current') 
             : vehicleService.getVehicles(),
     });
+
+    useEffect(() => {
+        if (!vehicles || vehicles.length === 0) return;
+
+        // Join rooms for all vehicles in the fleet
+        vehicles.forEach(v => {
+            signalRService.joinVehicleRoom(v.id);
+        });
+
+        // Listen for updates for any vehicle
+        // The signalRService.onReceiveTelemetry handles '*' for global updates
+        // but let's subscribe to each one to be safe and specific
+        const unsubscribes = vehicles.map(v => 
+            signalRService.onReceiveTelemetry(v.id, (data) => {
+                setLiveTelemetry(prev => ({
+                    ...prev,
+                    [v.id]: data
+                }));
+            })
+        );
+
+        return () => {
+            unsubscribes.forEach(unsub => unsub());
+            vehicles.forEach(v => {
+                signalRService.leaveVehicleRoom(v.id);
+            });
+        };
+    }, [vehicles]);
 
     const filteredVehicles = Array.isArray(vehicles) 
         ? vehicles.filter(v => 
@@ -124,7 +154,10 @@ const MyFleetPage = () => {
                             transition={{ delay: i * 0.05 }}
                         >
                             <Link to={`/vehicle/${vehicle.id}`} className="block">
-                                <VehicleCard vehicle={vehicle} />
+                                <VehicleCard 
+                                    vehicle={vehicle} 
+                                    telemetry={liveTelemetry[vehicle.id]}
+                                />
                             </Link>
                         </motion.div>
                     ))

@@ -1,13 +1,16 @@
 import { memo } from 'react';
-import { Car, Shield, User, ChevronRight, Activity } from 'lucide-react';
-import type { Vehicle } from '../../types';
+import { Car, Shield, User, ChevronRight, Activity, Zap } from 'lucide-react';
+import type { Vehicle, TelemetryDTO } from '../../types';
 
 interface VehicleCardProps {
     vehicle: Vehicle;
+    telemetry?: TelemetryDTO;
     onClick?: () => void;
 }
 
-export const VehicleCard = memo(({ vehicle }: VehicleCardProps) => {
+export const VehicleCard = memo(({ vehicle, telemetry }: VehicleCardProps) => {
+    const isLive = !!telemetry;
+    const currentStatus = (vehicle.status ?? vehicle.isActive);
     return (
         <div 
             className="group bg-[#1e293b]/40 border border-slate-800 p-5 rounded-[2.5rem] flex flex-col gap-6 active:scale-[0.98] transition-all relative overflow-hidden cursor-pointer"
@@ -26,22 +29,34 @@ export const VehicleCard = memo(({ vehicle }: VehicleCardProps) => {
                         <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">{vehicle.plateNumber}</p>
                     </div>
                 </div>
-                <div className={`px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${
-                    (vehicle.status ?? vehicle.isActive)
-                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
-                        : 'bg-slate-500/10 text-slate-500 border-slate-500/20'
-                }`}>
-                    {(vehicle.status ?? vehicle.isActive) ? 'Active' : 'Inactive'}
+                <div className="flex items-center gap-2">
+                    {isLive && (
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                            <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                            <span className="text-[7px] font-black text-emerald-500 uppercase tracking-tighter">Live</span>
+                        </div>
+                    )}
+                    <div className={`px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${
+                        currentStatus
+                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                            : 'bg-slate-500/10 text-slate-500 border-slate-500/20'
+                    }`}>
+                        {currentStatus ? 'Active' : 'Inactive'}
+                    </div>
                 </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 relative z-10">
                 <div className="p-4 bg-slate-900/50 rounded-2xl border border-slate-800/50">
                     <div className="flex items-center gap-2 mb-2">
-                        <Shield className="w-3 h-3 text-blue-500" />
-                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Health</span>
+                        {isLive ? <Zap className="w-3 h-3 text-amber-500" /> : <Shield className="w-3 h-3 text-blue-500" />}
+                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">
+                            {isLive ? 'Live Speed' : 'Health'}
+                        </span>
                     </div>
-                    <p className="text-sm font-black text-white italic">OPTIMAL</p>
+                    <p className="text-sm font-black text-white italic uppercase">
+                        {isLive ? `${telemetry.speed?.toFixed(0) || 0} KM/H` : 'OPTIMAL'}
+                    </p>
                 </div>
                 <div className="p-4 bg-slate-900/50 rounded-2xl border border-slate-800/50">
                     <div className="flex items-center gap-2 mb-2">
