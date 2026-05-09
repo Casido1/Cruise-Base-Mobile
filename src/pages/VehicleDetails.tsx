@@ -38,7 +38,6 @@ const VehicleDetails = () => {
         queryKey: ['vehicle-telemetry', id],
         queryFn: () => telemetryService.getLatestTelemetry(id!),
         enabled: !!id,
-        refetchInterval: 30000, // Reduced polling frequency as we now use SignalR
     });
 
     useEffect(() => {
