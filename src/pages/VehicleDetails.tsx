@@ -191,9 +191,10 @@ const VehicleDetails = () => {
                 <MapContainer 
                     center={[lat, lng]} 
                     zoom={15} 
-                    scrollWheelZoom={false}
-                    zoomControl={false}
-                    className="w-full h-full"
+                    scrollWheelZoom={true}
+                    zoomControl={true}
+                    style={{ height: '300px', width: '100%', borderRadius: '2rem' }}
+                    className="w-full"
                 >
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
