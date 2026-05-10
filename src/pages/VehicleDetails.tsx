@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
-import { MapContainer, TileLayer, Marker, useMap, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap, Circle, Popup, LayersControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -190,17 +190,42 @@ const VehicleDetails = () => {
             >
                 <MapContainer 
                     center={[lat, lng]} 
-                    zoom={15} 
+                    zoom={16} 
                     scrollWheelZoom={true}
                     zoomControl={true}
                     style={{ height: '300px', width: '100%', borderRadius: '2rem' }}
                     className="w-full"
                 >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <Marker position={[lat, lng]} icon={carIcon} />
+                    <LayersControl position="topright">
+                        <LayersControl.BaseLayer checked name="Standard Map">
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                        </LayersControl.BaseLayer>
+                        <LayersControl.BaseLayer name="Satellite View">
+                            <TileLayer
+                                attribution='&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'
+                                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                            />
+                        </LayersControl.BaseLayer>
+                    </LayersControl>
+
+                    <Marker position={[lat, lng]} icon={carIcon}>
+                        <Popup>
+                            <div className="p-2 min-w-[120px]">
+                                <p className="text-[10px] font-black text-slate-900 uppercase mb-1">{vehicle.brand} {vehicle.plateNumber}</p>
+                                <div className="flex items-center gap-2 text-[9px] font-bold text-slate-600">
+                                    <Zap className="w-3 h-3 text-amber-500" />
+                                    <span>{telemetry?.speed?.toFixed(1) || 0} KM/H</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-[9px] font-bold text-slate-600 mt-1">
+                                    <Navigation className="w-3 h-3 text-blue-500" />
+                                    <span>{telemetry?.heading?.toFixed(0) || 0}° Degree</span>
+                                </div>
+                            </div>
+                        </Popup>
+                    </Marker>
                     {geofences?.map((gf: Geofence) => (
                         <Circle 
                             key={gf.id}
