@@ -130,7 +130,7 @@ export interface Notification {
     message: string;
     isRead: boolean;
     createdAt: string;
-    type: 'Info' | 'Success' | 'Warning' | 'Error';
+    type: 'Info' | 'Success' | 'Warning' | 'Error' | 'Alert';
 }
 
 export interface TelemetryDTO {
@@ -149,4 +149,14 @@ export interface TelemetryDTO {
 export interface DeviceRegistration {
     vehicleId: string;
     imei: string;
+}
+
+export interface Geofence {
+    id: string;
+    vehicleId: string;
+    name: string;
+    latitude: number;
+    longitude: number;
+    radius: number;
+    traccarGeofenceId?: number;
 }

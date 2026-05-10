@@ -36,6 +36,7 @@ export const NotificationsPage = () => {
             case 'Success': return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
             case 'Warning': return <AlertTriangle className="w-5 h-5 text-amber-500" />;
             case 'Error': return <ShieldAlert className="w-5 h-5 text-red-500" />;
+            case 'Alert': return <ShieldAlert className="w-5 h-5 text-red-500" />;
             default: return <Info className="w-5 h-5 text-blue-500" />;
         }
     };

@@ -4,7 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { vehicleService } from '../services/vehicleService';
 import { telemetryService } from '../services/telemetryService';
 import { signalRService } from '../services/signalRService';
-import type { TelemetryDTO } from '../types';
+import { geofenceService } from '../services/geofenceService';
+import type { TelemetryDTO, Geofence } from '../types';
+import { useState } from 'react';
 import { 
     Car, 
     ChevronLeft, 
@@ -21,7 +23,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -37,6 +39,9 @@ const MapAutoRecenter = ({ center }: { center: [number, number] }) => {
 const VehicleDetails = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const [isGeofenceViewOpen, setIsGeofenceViewOpen] = useState(false);
+    const [newGeofenceName, setNewGeofenceName] = useState('');
+    const [newGeofenceRadius, setNewGeofenceRadius] = useState(500);
 
     const queryClient = useQueryClient();
 
@@ -50,6 +55,43 @@ const VehicleDetails = () => {
         queryKey: ['vehicle-telemetry', id],
         queryFn: () => telemetryService.getLatestTelemetry(id!),
         enabled: !!id,
+    });
+
+    const { data: geofences, isLoading: isGeofencesLoading } = useQuery({
+        queryKey: ['vehicle-geofences', id],
+        queryFn: () => geofenceService.getGeofencesByVehicleId(id!),
+        enabled: !!id,
+    });
+
+    const createGeofenceMutation = useMutation({
+        mutationFn: (data: { name: string; radius: number }) => 
+            geofenceService.createGeofence({
+                vehicleId: id!,
+                name: data.name,
+                radius: data.radius,
+                latitude: lat,
+                longitude: lng
+            }),
+        onSuccess: () => {
+            toast.success('Geofence created successfully');
+            queryClient.invalidateQueries({ queryKey: ['vehicle-geofences', id] });
+            setNewGeofenceName('');
+            setIsGeofenceViewOpen(false);
+        },
+        onError: () => {
+            toast.error('Failed to create geofence');
+        }
+    });
+
+    const deleteGeofenceMutation = useMutation({
+        mutationFn: (geofenceId: string) => geofenceService.deleteGeofence(geofenceId),
+        onSuccess: () => {
+            toast.success('Geofence deleted');
+            queryClient.invalidateQueries({ queryKey: ['vehicle-geofences', id] });
+        },
+        onError: () => {
+            toast.error('Failed to delete geofence');
+        }
     });
 
     useEffect(() => {
@@ -158,6 +200,14 @@ const VehicleDetails = () => {
                         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                     />
                     <Marker position={[lat, lng]} icon={carIcon} />
+                    {geofences?.map((gf: Geofence) => (
+                        <Circle 
+                            key={gf.id}
+                            center={[gf.latitude, gf.longitude]}
+                            radius={gf.radius}
+                            pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.1 }}
+                        />
+                    ))}
                     <MapAutoRecenter center={[lat, lng]} />
                 </MapContainer>
 
@@ -228,12 +278,81 @@ const VehicleDetails = () => {
                 >
                     <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Asset Security</h5>
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-slate-800/20 rounded-2xl border border-slate-800">
-                            <div className="flex items-center gap-3">
-                                <MapPin className="w-4 h-4 text-emerald-500" />
-                                <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Geofencing</span>
+                        <div 
+                            onClick={() => setIsGeofenceViewOpen(!isGeofenceViewOpen)}
+                            className="flex flex-col gap-3 p-4 bg-slate-800/20 rounded-2xl border border-slate-800 cursor-pointer hover:bg-slate-800/40 transition-all"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <MapPin className="w-4 h-4 text-emerald-500" />
+                                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Geofencing</span>
+                                </div>
+                                <span className="text-[8px] font-black text-emerald-500 uppercase bg-emerald-500/10 px-2 py-1 rounded-lg">
+                                    {geofences?.length || 0} Active
+                                </span>
                             </div>
-                            <span className="text-[8px] font-black text-emerald-500 uppercase bg-emerald-500/10 px-2 py-1 rounded-lg">Enabled</span>
+
+                            {isGeofenceViewOpen && (
+                                <motion.div 
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="space-y-4 pt-2 border-t border-slate-800"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {/* Create Form */}
+                                    <div className="space-y-3">
+                                        <input 
+                                            type="text" 
+                                            placeholder="GEOFENCE NAME (e.g. Home, Office)"
+                                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-[10px] font-black text-white uppercase placeholder:text-slate-600 focus:outline-none focus:border-blue-500 transition-all"
+                                            value={newGeofenceName}
+                                            onChange={(e) => setNewGeofenceName(e.target.value)}
+                                        />
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex-1 space-y-1">
+                                                <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Radius: {newGeofenceRadius}m</p>
+                                                <input 
+                                                    type="range" 
+                                                    min="100" 
+                                                    max="5000" 
+                                                    step="100"
+                                                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                                    value={newGeofenceRadius}
+                                                    onChange={(e) => setNewGeofenceRadius(parseInt(e.target.value))}
+                                                />
+                                            </div>
+                                            <button 
+                                                onClick={() => {
+                                                    if(!newGeofenceName) return toast.error('Enter geofence name');
+                                                    createGeofenceMutation.mutate({ name: newGeofenceName, radius: newGeofenceRadius });
+                                                }}
+                                                disabled={createGeofenceMutation.isPending}
+                                                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest disabled:opacity-50"
+                                            >
+                                                {createGeofenceMutation.isPending ? '...' : 'Add'}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* List */}
+                                    <div className="space-y-2">
+                                        {geofences?.map((gf: Geofence) => (
+                                            <div key={gf.id} className="flex items-center justify-between bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                                                <div>
+                                                    <p className="text-[9px] font-black text-white uppercase tracking-tight">{gf.name}</p>
+                                                    <p className="text-[8px] text-slate-500 font-bold uppercase">{gf.radius}m Radius</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => deleteGeofenceMutation.mutate(gf.id)}
+                                                    className="text-red-500 hover:text-red-400 p-1"
+                                                >
+                                                    <PowerOff className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
                         </div>
                         <div className="flex items-center justify-between p-4 bg-slate-800/20 rounded-2xl border border-slate-800">
                             <div className="flex items-center gap-3">
